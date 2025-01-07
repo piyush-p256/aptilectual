@@ -28,6 +28,7 @@ SECRET_KEY = env('DJANGO_SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = []
+LOGIN_REDIRECT_URL = '/profile/'
 
 
 # Application definition
