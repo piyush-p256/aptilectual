@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -30,14 +30,14 @@ def login_view(request):
         form = LoginForm()
     return render(request, 'login.html', {'form': form})
 
-@login_required
+
 def home(request):
     return render(request, 'home.html')
 
 @login_required
 def dailyprobblems(request):
     now = timezone.now()
-    start_time = now.replace(hour=1, minute=0, second=0, microsecond=0)
+    start_time = now.replace(hour=17, minute=0, second=0, microsecond=0)
     end_time = now.replace(hour=22, minute=0, second=0, microsecond=0)
 
     if start_time <= now <= end_time:
@@ -45,48 +45,50 @@ def dailyprobblems(request):
         if problems.exists():
             if request.method == 'POST':
                 problem_id = request.POST.get('problem_id')
-                problem = Problem.objects.get(id=problem_id)
-                form = SubmissionForm(request.POST)
-                if form.is_valid():
-                    # Check if the user has already attempted this problem
-                    if UserAnswer.objects.filter(user=request.user, problem=problem).exists():
-                        return render(request, 'dailyprobblems.html', {'problems': problems, 'form': form, 'message': 'You have already attempted this question.'})
+                problem = get_object_or_404(Problem, id=problem_id, is_active=True, done=False)
+                selected_option = request.POST.get('selected_option')
+                solution_image_url = request.POST.get('solution_image_url', '')
 
-                    submission = form.save(commit=False)
-                    submission.user = request.user
-                    submission.problem = problem
-                    submission.is_correct = (submission.selected_option == problem.correct_option)
-                    submission.save()
+                # Check if the user has already attempted this problem
+                if UserAnswer.objects.filter(user=request.user, problem=problem).exists():
+                    return render(request, 'dailyprobblems.html', {'problems': problems, 'message': 'You have already attempted this question.'})
 
-                    # Update user stats
-                    user = request.user
-                    user.total_attempted = F('total_attempted') + 1
-                    if submission.is_correct:
-                        user.total_correct = F('total_correct') + 1
+                submission = UserAnswer(
+                    user=request.user,
+                    problem=problem,
+                    selected_option=selected_option,
+                    solution_image_url=solution_image_url,
+                    is_correct=(selected_option == str(problem.correct_option))
+                )
+                submission.save()
 
-                    # Update streak logic
-                    today = timezone.now().date()
-                    yesterday = today - timedelta(days=1)
-                    solved_yesterday = UserAnswer.objects.filter(user=user, time_solved__date=yesterday).exists()
+                # Update user stats
+                user = request.user
+                user.total_attempted = F('total_attempted') + 1
+                if submission.is_correct:
+                    user.total_correct = F('total_correct') + 1
 
-                    if solved_yesterday:
-                        user.current_streak = F('current_streak') + 1
-                    else:
-                        user.current_streak = 1
+                # Update streak logic
+                today = timezone.now().date()
+                yesterday = today - timedelta(days=1)
+                solved_yesterday = UserAnswer.objects.filter(user=user, time_solved__date=yesterday).exists()
 
-                    if user.current_streak > user.highest_streak:
-                        user.highest_streak = F('current_streak')
+                if solved_yesterday:
+                    user.current_streak = F('current_streak') + 1
+                else:
+                    user.current_streak = 1
 
-                    user.save()
-                    return redirect('dailyprobblems')
+                if user.current_streak > user.highest_streak:
+                    user.highest_streak = F('current_streak')
+
+                user.save()
+                return redirect('dailyprobblems')
             else:
-                form = SubmissionForm()
-            return render(request, 'dailyprobblems.html', {'problems': problems, 'form': form})
+                return render(request, 'dailyprobblems.html', {'problems': problems})
         else:
             return render(request, 'dailyprobblems.html', {'message': 'No problems available today.'})
     else:
         return render(request, 'dailyprobblems.html', {'message': 'Problems will be available from 17:00 to 22:00.'})
-    
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
