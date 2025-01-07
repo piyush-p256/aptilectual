@@ -1,6 +1,6 @@
-# Aptitude Platform
+# Aptilectual
 
-Aptitude Platform is a Django web application designed to help users practice and improve their aptitude skills by solving daily problems. Features include user registration, login, solving daily problems, viewing leaderboards, and reviewing past problems.
+Aptilectual is a Django web application designed to help users practice and improve their aptitude skills by solving daily problems. Features include user registration, login, solving daily problems, viewing leaderboards, and reviewing past problems.
 
 ## Table of Contents
 
