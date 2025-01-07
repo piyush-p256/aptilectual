@@ -1,0 +1,60 @@
+<!-- templates/dailyprobblems.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daily Problems</title>
+    <script>
+        function updateOptions() {
+            var problemId = document.getElementById('problem_id').value;
+            var options = document.querySelectorAll('.option');
+            options.forEach(function(option) {
+                option.style.display = 'none';
+            });
+            document.getElementById('options_' + problemId).style.display = 'block';
+        }
+    </script>
+</head>
+<body>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% elif problems %}
+        <h2>Choose a problem to solve:</h2>
+        <form method="post">
+            {% csrf_token %}
+            <select name="problem_id" id="problem_id" required onchange="updateOptions()">
+                {% for problem in problems %}
+                    <option value="{{ problem.id }}">{{ problem.question }}</option>
+                {% endfor %}
+            </select>
+            <br><br>
+            {% for problem in problems %}
+                <div id="options_{{ problem.id }}" class="option" style="display:none;">
+                    <label>
+                        <input type="radio" name="selected_option" value="1" required>
+                        {{ problem.option1 }}
+                    </label><br>
+                    <label>
+                        <input type="radio" name="selected_option" value="2" required>
+                        {{ problem.option2 }}
+                    </label><br>
+                    <label>
+                        <input type="radio" name="selected_option" value="3" required>
+                        {{ problem.option3 }}
+                    </label><br>
+                    <label>
+                        <input type="radio" name="selected_option" value="4" required>
+                        {{ problem.option4 }}
+                    </label><br>
+                </div>
+            {% endfor %}
+            <br>
+            <label for="solution_image_url">Solution Image URL (optional):</label>
+            <input type="url" id="solution_image_url" name="solution_image_url">
+            <br><br>
+            <button type="submit">Submit</button>
+        </form>
+    {% else %}
+        <p>No problems available today.</p>
+    {% endif %}
+</body>
+</html>

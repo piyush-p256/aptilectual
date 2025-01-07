@@ -1,0 +1,22 @@
+<!-- templates/monthly_leaderboard.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monthly Leaderboard</title>
+</head>
+<body>
+    <h2>Monthly Leaderboard</h2>
+    <ul>
+        {% for user in users %}
+            <li>
+                <strong>Username:</strong> {{ user.username }}<br>
+                <strong>Total Correct Answers:</strong> {{ user.total_correct }}<br>
+                <strong>Total Answers:</strong> {{ user.total_answers }}<br>
+                <strong>First Position Count:</strong> {{ user.first_position_count }}<br>
+                <strong>Second Position Count:</strong> {{ user.second_position_count }}<br>
+                <strong>Third Position Count:</strong> {{ user.third_position_count }}<br>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

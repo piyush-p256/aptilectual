@@ -1,0 +1,29 @@
+<!-- templates/past_problems.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Past Problems</title>
+</head>
+<body>
+    <h2>Past Problems</h2>
+    {% if past_problems %}
+        <ul>
+            {% for problem in past_problems %}
+                <li>
+                    <p><strong>Question:</strong> {{ problem.question }}</p>
+                    <p><strong>Options:</strong></p>
+                    <ul>
+                        <li>A. {{ problem.option1 }}</li>
+                        <li>B. {{ problem.option2 }}</li>
+                        <li>C. {{ problem.option3 }}</li>
+                        <li>D. {{ problem.option4 }}</li>
+                    </ul>
+                    <p><strong>Correct Answer:</strong> Option {{ problem.correct_option }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No past problems available.</p>
+    {% endif %}
+</body>
+</html>
