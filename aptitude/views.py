@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.db.models import Count, Min, Q
 from django.utils import timezone
 from django.db.models import F
+from django.http import JsonResponse
 from datetime import timedelta
 from .models import Problem, UserAnswer, CustomUser, LeaderDaily
 from .forms import SignUpForm, LoginForm, SubmissionForm
@@ -34,14 +35,23 @@ def login_view(request):
 def home(request):
     return render(request, 'home.html')
 
+from django.db.models import F
+from django.utils.timezone import localtime, timedelta
+
 @login_required
 def dailyprobblems(request):
-    now = timezone.now()
-    start_time = now.replace(hour=17, minute=0, second=0, microsecond=0)
+    now = timezone.localtime()  # Use local time
+    start_time = now.replace(hour=1, minute=0, second=0, microsecond=0)
     end_time = now.replace(hour=22, minute=0, second=0, microsecond=0)
+
+    print("Current time (now):", now)
+    print("Start time:", start_time)
+    print("End time:", end_time)
 
     if start_time <= now <= end_time:
         problems = Problem.objects.filter(is_active=True, done=False)
+        attempted_problems = UserAnswer.objects.filter(user=request.user).values_list('problem', flat=True)
+
         if problems.exists():
             if request.method == 'POST':
                 problem_id = request.POST.get('problem_id')
@@ -50,8 +60,8 @@ def dailyprobblems(request):
                 solution_image_url = request.POST.get('solution_image_url', '')
 
                 # Check if the user has already attempted this problem
-                if UserAnswer.objects.filter(user=request.user, problem=problem).exists():
-                    return render(request, 'dailyprobblems.html', {'problems': problems, 'message': 'You have already attempted this question.'})
+                if problem_id in attempted_problems:
+                    return JsonResponse({'status': 'error', 'message': 'You have already attempted this question.'})
 
                 submission = UserAnswer(
                     user=request.user,
@@ -69,7 +79,7 @@ def dailyprobblems(request):
                     user.total_correct = F('total_correct') + 1
 
                 # Update streak logic
-                today = timezone.now().date()
+                today = localtime().date()
                 yesterday = today - timedelta(days=1)
                 solved_yesterday = UserAnswer.objects.filter(user=user, time_solved__date=yesterday).exists()
 
@@ -82,17 +92,23 @@ def dailyprobblems(request):
                     user.highest_streak = F('current_streak')
 
                 user.save()
-                return redirect('dailyprobblems')
+                return JsonResponse({'status': 'success', 'message': 'Submission successful.'})
             else:
-                return render(request, 'dailyprobblems.html', {'problems': problems})
+                return render(request, 'dailyprobblems.html', {
+                    'problems': problems,
+                    'attempted_problems': attempted_problems
+                })
         else:
             return render(request, 'dailyprobblems.html', {'message': 'No problems available today.'})
     else:
-        return render(request, 'dailyprobblems.html', {'message': 'Problems will be available from 17:00 to 22:00.'})
+        return render(request, 'dailyprobblems.html', {'message': 'Problems will be available from 1:00 to 6:00.'})
+
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from .models import UserAnswer, CustomUser
+
+
 
 @login_required
 def profile(request):
@@ -117,9 +133,13 @@ def profile(request):
 def daily_leaderboard(request):
     leader_daily = LeaderDaily.objects.first()
     if leader_daily and leader_daily.show_leaderboard:
-        now = timezone.now()
+        now = timezone.localtime()
         start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
         end_time = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        print("Current time:", now)
+        print("Start time:", start_time)
+        print("End time:", end_time)
 
         users_with_answers = UserAnswer.objects.filter(time_solved__range=(start_time, end_time))
         users = CustomUser.objects.filter(id__in=users_with_answers.values_list('user', flat=True)).annotate(
@@ -136,6 +156,8 @@ def daily_leaderboard(request):
                 'username': user.username,
                 'solution_image_url': solution_image_url,
             })
+
+        print("Leaderboard data:", leaderboard_data)
 
         return render(request, 'daily_leaderboard.html', {'leaderboard_data': leaderboard_data})
     else:

@@ -1,29 +1,448 @@
-<!-- templates/past_problems.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Past Problems</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Past Problems - Aptilectual</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f9;
+            --text-color: #333333;
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #e74c3c;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --nav-bg: #ffffff;
+            --mobile-menu-bg: #ffffff;
+        }
+        /* Dark theme variables */
+        body.dark-theme {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --card-bg: #1a1a1a;
+            --border-color: #2a2a2a;
+            --nav-bg: #111111;
+            --mobile-menu-bg: #121212;
+        }
+        /* Light theme variables */
+        body.light-theme {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --nav-bg: #ffffff;
+            --mobile-menu-bg: #ffffff;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        header {
+            background-color: var(--nav-bg);
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            margin: 0 2rem;
+        }
+        .nav-links {
+            display: flex;
+            list-style-type: none;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-links li a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        .nav-links li a:hover {
+            color: var(--primary-color);
+        }
+        .desktop-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .btn {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            font-size: 1rem;
+            width: 100%;
+            text-align: center;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: #ffffff;
+        }
+        .btn-secondary:hover {
+            background-color: #27ae60;
+        }
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+        }
+        .theme-toggle:hover {
+            transform: rotate(360deg);
+        }
+        .burger, .close-menu {
+            display: none;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+        }
+        .burger div {
+            width: 25px;
+            height: 3px;
+            background-color: var(--text-color);
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        main {
+            padding-top: 5rem;
+        }
+        .hero {
+            text-align: center;
+            padding: 8rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2.5rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .feature {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .feature h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        .feature p {
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+        @media screen and (max-width: 768px) {
+            .desktop-controls .auth-buttons {
+                display: none;
+            }
+            .nav-container {
+                margin: 0;
+            }
+            .nav-links {
+                position: fixed;
+                right: 0;
+                height: 100%;
+                top: 0;
+                background-color: var(--mobile-menu-bg);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                transform: translateX(100%);
+                transition: transform 0.3s ease-in-out;
+                z-index: 1000;
+                padding: 3rem 1rem;
+                overflow-y: auto;
+            }
+            .nav-links li {
+                opacity: 0;
+                margin: 1.5rem 0;
+                width: 100%;
+                text-align: center;
+            }
+            .nav-links li a {
+                font-size: 1.5rem;
+                display: block;
+                padding: 1rem;
+                width: 100%;
+            }
+            .mobile-menu-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                margin-bottom: 2rem;
+            }
+            .mobile-auth {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                width: 100%;
+                margin-top: auto;
+                padding: 2rem 0;
+            }
+            .mobile-auth button {
+                width: 100%;
+            }
+            .burger {
+                display: block;
+                z-index: 2000;
+            }
+            .close-menu {
+                display: block;
+                font-size: 2rem;
+            }
+            .nav-active {
+                transform: translateX(0%);
+            }
+            .logo {
+                z-index: 2000;
+                font-size: 1.5rem;
+            }
+            .desktop-controls {
+                z-index: 2000;
+            }
+            .theme-toggle {
+                z-index: 2000;
+            }
+            @keyframes navLinkFade {
+                from {
+                    opacity: 0;
+                    transform: translateX(50px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0px);
+                }
+            }
+            .nav-active li {
+                animation: navLinkFade 0.5s ease forwards 0.3s;
+            }
+        }
+        @media screen and (min-width: 769px) {
+            .mobile-auth {
+                display: none;
+            }
+            .mobile-menu-header {
+                display: none;
+            }
+            .close-menu {
+                display: none;
+            }
+        }
+        @media screen and (max-width: 480px) {
+            .hero {
+                padding: 4rem 1rem;
+            }
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .hero p {
+                font-size: 1rem;
+            }
+            .nav-links li a {
+                font-size: 1.25rem;
+            }
+        }
+        /* Past Problems Container */
+        .past-problems-container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+            max-width: 800px;
+            text-align: center;
+        }
+        .past-problems-container h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        .past-problems-container p {
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+        .past-problems-container ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .past-problems-container li {
+            background-color: var(--card-bg);
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .past-problems-container li strong {
+            color: var(--primary-color);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h2>Past Problems</h2>
-    {% if past_problems %}
-        <ul>
-            {% for problem in past_problems %}
-                <li>
-                    <p><strong>Question:</strong> {{ problem.question }}</p>
-                    <p><strong>Options:</strong></p>
-                    <ul>
-                        <li>A. {{ problem.option1 }}</li>
-                        <li>B. {{ problem.option2 }}</li>
-                        <li>C. {{ problem.option3 }}</li>
-                        <li>D. {{ problem.option4 }}</li>
-                    </ul>
-                    <p><strong>Correct Answer:</strong> Option {{ problem.correct_option }}</p>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No past problems available.</p>
-    {% endif %}
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">Aptilectual</div>
+            <div class="nav-container">
+                <ul class="nav-links">
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'dailyprobblems' %}">Daily Problems</a></li>
+                    <li><a href="{% url 'past_problems' %}">Past Problems</a></li>
+                    <li><a href="{% url 'daily_leaderboard' %}">Leaderboard</a></li>
+                    <li><a href="{% url 'profile' %}">Profile</a></li>
+                </ul>
+            </div>
+            <div class="desktop-controls">
+                <div class="auth-buttons">
+                    {% if user.is_authenticated %}
+                        <form method="POST" action="{% url 'logout' %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary">Logout</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'login' %}" id="loginBtn" class="btn btn-primary">Login</a>
+                        <a href="{% url 'signup' %}" id="registerBtn" class="btn btn-secondary">Register</a>
+                    {% endif %}
+                </div>
+                <button id="themeToggle" class="theme-toggle"></button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="past-problems-container">
+            <h2>Past Problems</h2>
+            {% if past_problems %}
+                <ul>
+                    {% for problem in past_problems %}
+                        <li>
+                            <p><strong>Question:</strong> {{ problem.question }}</p>
+                            <p><strong>Options:</strong></p>
+                            <ul>
+                                <li>A. {{ problem.option1 }}</li>
+                                <li>B. {{ problem.option2 }}</li>
+                                <li>C. {{ problem.option3 }}</li>
+                                <li>D. {{ problem.option4 }}</li>
+                            </ul>
+                            <p><strong>Correct Answer:</strong> Option {{ problem.correct_option }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No past problems available.</p>
+            {% endif %}
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('themeToggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            const savedTheme = localStorage.getItem('theme');
+            const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
+            document.body.classList.add(initialTheme);
+            updateThemeIcon(initialTheme);
+
+            themeToggle.addEventListener('click', () => {
+                const isLightTheme = document.body.classList.contains('light-theme');
+                const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
+                document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
+                document.body.classList.add(newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
+            });
+
+            prefersDarkScheme.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    const newTheme = e.matches ? 'dark-theme' : 'light-theme';
+                    document.body.classList.remove('dark-theme', 'light-theme');
+                    document.body.classList.add(newTheme);
+                    updateThemeIcon(newTheme);
+                }
+            });
+        });
+
+        function updateThemeIcon(theme) {
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
+        }
+    </script>
 </body>
 </html>

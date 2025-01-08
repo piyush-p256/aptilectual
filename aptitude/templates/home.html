@@ -450,6 +450,7 @@
     </main>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+        initializeNavigation();
         const themeToggle = document.getElementById('themeToggle');
         const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
         const savedTheme = localStorage.getItem('theme');
@@ -480,6 +481,47 @@
         const themeToggle = document.getElementById('themeToggle');
         themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
     }
+
+    function initializeNavigation() {
+    const burger = document.querySelector('.burger');
+    const nav = document.querySelector('.nav-links');
+    const navLinks = document.querySelectorAll('.nav-links li');
+    const closeMenu = document.querySelector('.close-menu');
+
+    function toggleMenu() {
+        nav.classList.toggle('nav-active');
+        burger.classList.toggle('toggle');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (nav.classList.contains('nav-active') &&
+            !nav.contains(e.target) &&
+            !burger.contains(e.target)) {
+            toggleMenu();
+        }
+    });
+
+    // Toggle menu on burger click
+    burger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+    });
+
+    // Close menu on X button click
+    if (closeMenu) {
+        closeMenu.addEventListener('click', toggleMenu);
+    }
+
+    // Close menu when clicking a link
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (nav.classList.contains('nav-active')) {
+                toggleMenu();
+            }
+        });
+    });
+}
 </script>
 </body>
 </html>
