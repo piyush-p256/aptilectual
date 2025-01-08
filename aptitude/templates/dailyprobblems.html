@@ -408,6 +408,14 @@
                     <li><a href="{% url 'past_problems' %}">Past Problems</a></li>
                     <li><a href="{% url 'daily_leaderboard' %}">Leaderboard</a></li>
                     <li><a href="{% url 'profile' %}">Profile</a></li>
+                    <li class="mobile-auth">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'logout' %}" id="logoutBtn" class="btn btn-secondary">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" id="loginBtn" class="btn btn-primary">Login</a>
+                        <a href="{% url 'signup' %}" id="registerBtn" class="btn btn-secondary">Register</a>
+                    {% endif %}
+                    </li>
                 </ul>
             </div>
             <div class="desktop-controls">
@@ -423,6 +431,11 @@
                     {% endif %}
                 </div>
                 <button id="themeToggle" class="theme-toggle"></button>
+                <div class="burger">
+                    <div class="line1"></div>
+                    <div class="line2"></div>
+                    <div class="line3"></div>
+                </div>
             </div>
         </nav>
     </header>

@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Daily Leaderboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Leaderboard - Aptilectual</title>
     <style>
         :root {
             --bg-color: #f4f7f9;
@@ -350,6 +352,14 @@
         .leaderboard-container li strong {
             color: var(--primary-color);
         }
+        .leaderboard-container li .solution-image {
+            margin-top: 1rem;
+        }
+        .leaderboard-container li .solution-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
@@ -365,6 +375,14 @@
                     <li><a href="{% url 'past_problems' %}">Past Problems</a></li>
                     <li><a href="{% url 'daily_leaderboard' %}">Leaderboard</a></li>
                     <li><a href="{% url 'profile' %}">Profile</a></li>
+                    <li class="mobile-auth">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'logout' %}" id="logoutBtn" class="btn btn-secondary">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" id="loginBtn" class="btn btn-primary">Login</a>
+                        <a href="{% url 'signup' %}" id="registerBtn" class="btn btn-secondary">Register</a>
+                    {% endif %}
+                    </li>
                 </ul>
             </div>
             <div class="desktop-controls">
@@ -401,7 +419,10 @@
                             <strong>Rank:</strong> {{ data.rank }}<br>
                             <strong>Username:</strong> {{ data.username }}<br>
                             {% if data.solution_image_url %}
-                                <strong>Solution Image:</strong> <img src="{{ data.solution_image_url }}" alt="Solution Image" style="max-width: 100%;"><br>
+                                <div class="solution-image">
+                                    <strong>Solution Image:</strong><br>
+                                    <img src="{{ data.solution_image_url }}" alt="Solution Image">
+                                </div>
                             {% endif %}
                         </li>
                     {% endfor %}
@@ -411,7 +432,7 @@
     </main>
 
     <script>
-         document.addEventListener('DOMContentLoaded', () => {
+              document.addEventListener('DOMContentLoaded', () => {
            
                         
 

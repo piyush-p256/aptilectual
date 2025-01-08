@@ -327,7 +327,7 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin: 2rem auto;
             max-width: 800px;
-            text-align: center;
+            text-align: left;
         }
         .past-problems-container h2 {
             color: var(--primary-color);
@@ -352,6 +352,24 @@
         .past-problems-container li strong {
             color: var(--primary-color);
         }
+        .past-problems-container li .answer {
+            display: none;
+            margin-top: 1rem;
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+        .past-problems-container li button {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .past-problems-container li button:hover {
+            background-color: #2980b9;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
@@ -367,6 +385,14 @@
                     <li><a href="{% url 'past_problems' %}">Past Problems</a></li>
                     <li><a href="{% url 'daily_leaderboard' %}">Leaderboard</a></li>
                     <li><a href="{% url 'profile' %}">Profile</a></li>
+                    <li class="mobile-auth">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'logout' %}" id="logoutBtn" class="btn btn-secondary">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" id="loginBtn" class="btn btn-primary">Login</a>
+                        <a href="{% url 'signup' %}" id="registerBtn" class="btn btn-secondary">Register</a>
+                    {% endif %}
+                    </li>
                 </ul>
             </div>
             <div class="desktop-controls">
@@ -382,6 +408,11 @@
                     {% endif %}
                 </div>
                 <button id="themeToggle" class="theme-toggle"></button>
+            </div>
+            <div class="burger">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
             </div>
         </nav>
     </header>
@@ -401,7 +432,8 @@
                                 <li>C. {{ problem.option3 }}</li>
                                 <li>D. {{ problem.option4 }}</li>
                             </ul>
-                            <p><strong>Correct Answer:</strong> Option {{ problem.correct_option }}</p>
+                            <button onclick="showAnswer(this)">Show Answer</button>
+                            <p class="answer"><strong>Correct Answer:</strong> Option {{ problem.correct_option }}</p>
                         </li>
                     {% endfor %}
                 </ul>
@@ -412,36 +444,88 @@
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const themeToggle = document.getElementById('themeToggle');
-            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-            const savedTheme = localStorage.getItem('theme');
-            const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
-            document.body.classList.add(initialTheme);
-            updateThemeIcon(initialTheme);
+             document.addEventListener('DOMContentLoaded', () => {
+           
+                        
 
-            themeToggle.addEventListener('click', () => {
-                const isLightTheme = document.body.classList.contains('light-theme');
-                const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
-                document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
-                document.body.classList.add(newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateThemeIcon(newTheme);
-            });
+           const themeToggle = document.getElementById('themeToggle');
+           const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+           const savedTheme = localStorage.getItem('theme');
+           const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
+           document.body.classList.add(initialTheme);
+           updateThemeIcon(initialTheme);
 
-            prefersDarkScheme.addEventListener('change', (e) => {
-                if (!localStorage.getItem('theme')) {
-                    const newTheme = e.matches ? 'dark-theme' : 'light-theme';
-                    document.body.classList.remove('dark-theme', 'light-theme');
-                    document.body.classList.add(newTheme);
-                    updateThemeIcon(newTheme);
-                }
-            });
-        });
+           themeToggle.addEventListener('click', () => {
+               const isLightTheme = document.body.classList.contains('light-theme');
+               const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
+               document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
+               document.body.classList.add(newTheme);
+               localStorage.setItem('theme', newTheme);
+               updateThemeIcon(newTheme);
+           });
 
-        function updateThemeIcon(theme) {
-            const themeToggle = document.getElementById('themeToggle');
-            themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
+           prefersDarkScheme.addEventListener('change', (e) => {
+               if (!localStorage.getItem('theme')) {
+                   const newTheme = e.matches ? 'dark-theme' : 'light-theme';
+                   document.body.classList.remove('dark-theme', 'light-theme');
+                   document.body.classList.add(newTheme);
+                   updateThemeIcon(newTheme);
+               }
+           });
+
+           initializeNavigation();
+       });
+
+
+       function updateThemeIcon(theme) {
+           const themeToggle = document.getElementById('themeToggle');
+           themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
+       }
+
+       function initializeNavigation() {
+           const burger = document.querySelector('.burger');
+           const nav = document.querySelector('.nav-links');
+           const navLinks = document.querySelectorAll('.nav-links li');
+           const closeMenu = document.querySelector('.close-menu');
+
+           function toggleMenu() {
+               nav.classList.toggle('nav-active');
+               burger.classList.toggle('toggle');
+           }
+
+           // Close menu when clicking outside
+           document.addEventListener('click', (e) => {
+               if (nav.classList.contains('nav-active') &&
+                   !nav.contains(e.target) &&
+                   !burger.contains(e.target)) {
+                   toggleMenu();
+               }
+           });
+
+           // Toggle menu on burger click
+           burger.addEventListener('click', (e) => {
+               e.stopPropagation();
+               toggleMenu();
+           });
+
+           // Close menu on X button click
+           if (closeMenu) {
+               closeMenu.addEventListener('click', toggleMenu);
+           }
+
+           // Close menu when clicking a link
+           navLinks.forEach(link => {
+               link.addEventListener('click', () => {
+                   if (nav.classList.contains('nav-active')) {
+                       toggleMenu();
+                   }
+               });
+           });
+       }
+
+        function showAnswer(button) {
+            const answer = button.nextElementSibling;
+            answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
         }
     </script>
 </body>
