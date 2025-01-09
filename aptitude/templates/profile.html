@@ -353,6 +353,14 @@
                     <li><a href="{% url 'past_problems' %}">Past Problems</a></li>
                     <li><a href="{% url 'daily_leaderboard' %}">Leaderboard</a></li>
                     <li><a href="{% url 'profile' %}">Profile</a></li>
+                    <li class="mobile-auth">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'logout' %}" id="logoutBtn" class="btn btn-secondary">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" id="loginBtn" class="btn btn-primary">Login</a>
+                        <a href="{% url 'signup' %}" id="registerBtn" class="btn btn-secondary">Register</a>
+                    {% endif %}
+                    </li>
                 </ul>
             </div>
             <div class="desktop-controls">
@@ -368,6 +376,11 @@
                     {% endif %}
                 </div>
                 <button id="themeToggle" class="theme-toggle"></button>
+            </div>
+            <div class="burger">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
             </div>
         </nav>
     </header>
@@ -385,37 +398,84 @@
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const themeToggle = document.getElementById('themeToggle');
-            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-            const savedTheme = localStorage.getItem('theme');
-            const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
-            document.body.classList.add(initialTheme);
-            updateThemeIcon(initialTheme);
+      document.addEventListener('DOMContentLoaded', () => {
+           
+                        
 
-            themeToggle.addEventListener('click', () => {
-                const isLightTheme = document.body.classList.contains('light-theme');
-                const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
-                document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
-                document.body.classList.add(newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateThemeIcon(newTheme);
-            });
+           const themeToggle = document.getElementById('themeToggle');
+           const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+           const savedTheme = localStorage.getItem('theme');
+           const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
+           document.body.classList.add(initialTheme);
+           updateThemeIcon(initialTheme);
 
-            prefersDarkScheme.addEventListener('change', (e) => {
-                if (!localStorage.getItem('theme')) {
-                    const newTheme = e.matches ? 'dark-theme' : 'light-theme';
-                    document.body.classList.remove('dark-theme', 'light-theme');
-                    document.body.classList.add(newTheme);
-                    updateThemeIcon(newTheme);
-                }
-            });
-        });
+           themeToggle.addEventListener('click', () => {
+               const isLightTheme = document.body.classList.contains('light-theme');
+               const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
+               document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
+               document.body.classList.add(newTheme);
+               localStorage.setItem('theme', newTheme);
+               updateThemeIcon(newTheme);
+           });
 
-        function updateThemeIcon(theme) {
-            const themeToggle = document.getElementById('themeToggle');
-            themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
-        }
+           prefersDarkScheme.addEventListener('change', (e) => {
+               if (!localStorage.getItem('theme')) {
+                   const newTheme = e.matches ? 'dark-theme' : 'light-theme';
+                   document.body.classList.remove('dark-theme', 'light-theme');
+                   document.body.classList.add(newTheme);
+                   updateThemeIcon(newTheme);
+               }
+           });
+
+           initializeNavigation();
+       });
+
+
+       function updateThemeIcon(theme) {
+           const themeToggle = document.getElementById('themeToggle');
+           themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
+       }
+
+       function initializeNavigation() {
+           const burger = document.querySelector('.burger');
+           const nav = document.querySelector('.nav-links');
+           const navLinks = document.querySelectorAll('.nav-links li');
+           const closeMenu = document.querySelector('.close-menu');
+
+           function toggleMenu() {
+               nav.classList.toggle('nav-active');
+               burger.classList.toggle('toggle');
+           }
+
+           // Close menu when clicking outside
+           document.addEventListener('click', (e) => {
+               if (nav.classList.contains('nav-active') &&
+                   !nav.contains(e.target) &&
+                   !burger.contains(e.target)) {
+                   toggleMenu();
+               }
+           });
+
+           // Toggle menu on burger click
+           burger.addEventListener('click', (e) => {
+               e.stopPropagation();
+               toggleMenu();
+           });
+
+           // Close menu on X button click
+           if (closeMenu) {
+               closeMenu.addEventListener('click', toggleMenu);
+           }
+
+           // Close menu when clicking a link
+           navLinks.forEach(link => {
+               link.addEventListener('click', () => {
+                   if (nav.classList.contains('nav-active')) {
+                       toggleMenu();
+                   }
+               });
+           });
+       }
     </script>
 </body>
 </html>
