@@ -387,6 +387,48 @@
         .form-footer a:hover {
             text-decoration: underline;
         }
+
+        .password-requirements {
+            display: none;
+            position: absolute;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 5px;
+            width: 300px;
+            z-index: 1000;
+        }
+
+        .password-requirements h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .requirement {
+            font-size: 13px;
+            color: #dc3545;
+            margin: 5px 0;
+            transition: color 0.3s ease;
+        }
+
+        .requirement.valid {
+            color: #28a745;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+        }
+
+        .form-group {
+            position: relative;
+        }
     </style>
    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -450,6 +492,15 @@
                             {{ form.password1.errors|join:", " }}
                         </div>
                     {% endif %}
+                </div>
+                <div class="password-requirements" id="passwordRequirements">
+                    <span class="close-btn" id="closeRequirements">&times;</span>
+                    <h3>Password should be at least 8 characters long and include:</h3>
+                    <div class="requirement" id="length">At least 8 characters</div>
+                    <div class="requirement" id="uppercase">At least one uppercase letter</div>
+                    <div class="requirement" id="lowercase">At least one lowercase letter</div>
+                    <div class="requirement" id="number">At least one number</div>
+                    <div class="requirement" id="special">At least one special character (@, $, !, %, *, ?, &)</div>
                 </div>
                 <div class="form-group">
                     <label for="id_password2">Confirm Password</label>
@@ -550,6 +601,68 @@
                });
            });
        }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('id_password1');
+        const requirements = document.getElementById('passwordRequirements');
+        const closeBtn = document.getElementById('closeRequirements');
+
+        // Requirements elements
+        const length = document.getElementById('length');
+        const uppercase = document.getElementById('uppercase');
+        const lowercase = document.getElementById('lowercase');
+        const number = document.getElementById('number');
+        const special = document.getElementById('special');
+
+        // Show requirements on password field focus
+        passwordInput.addEventListener('focus', function() {
+            requirements.style.display = 'block';
+        });
+
+        // Close button functionality
+        closeBtn.addEventListener('click', function() {
+            requirements.style.display = 'none';
+        });
+
+        // Validate password in real-time
+        passwordInput.addEventListener('input', function() {
+            const value = this.value;
+            
+            // Check each requirement
+            const checks = {
+                length: value.length >= 8,
+                uppercase: /[A-Z]/.test(value),
+                lowercase: /[a-z]/.test(value),
+                number: /[0-9]/.test(value),
+                special: /[@$!%*?&]/.test(value)
+            };
+
+            // Update UI for each requirement
+            Object.keys(checks).forEach(check => {
+                const element = document.getElementById(check);
+                if (checks[check]) {
+                    element.classList.add('valid');
+                } else {
+                    element.classList.remove('valid');
+                }
+            });
+
+            // Hide requirements if all are met
+            if (Object.values(checks).every(check => check)) {
+                requirements.style.display = 'none';
+            }
+        });
+
+        // Hide requirements when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!requirements.contains(e.target) && 
+                e.target !== passwordInput) {
+                requirements.style.display = 'none';
+            }
+        });
+    });
 </script>
 </body>
 </html>

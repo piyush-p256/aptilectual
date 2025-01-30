@@ -25,7 +25,7 @@ environ.Env.read_env()
 SECRET_KEY = 'django-insecure-x(mjeyv=b8y(@f9n40a4r*3d)j8h)4omzxkp50ar6d!d#@2n!)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 LOGIN_REDIRECT_URL = '/profile/'

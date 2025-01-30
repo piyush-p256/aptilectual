@@ -6,6 +6,7 @@ from django.db.models import Count, Min, Q
 from django.utils import timezone
 from django.db.models import F
 from django.http import JsonResponse
+from django.db.utils import IntegrityError
 from datetime import timedelta
 from .models import Problem, UserAnswer, CustomUser, LeaderDaily
 from .forms import SignUpForm, LoginForm, SubmissionForm
@@ -40,17 +41,13 @@ from django.utils.timezone import localtime, timedelta
 
 @login_required
 def dailyprobblems(request):
-    now = timezone.localtime()  # Use local time
+    now = timezone.localtime()
     start_time = now.replace(hour=1, minute=0, second=0, microsecond=0)
     end_time = now.replace(hour=22, minute=0, second=0, microsecond=0)
 
-    print("Current time (now):", now)
-    print("Start time:", start_time)
-    print("End time:", end_time)
-
     if start_time <= now <= end_time:
         problems = Problem.objects.filter(is_active=True, done=False)
-        attempted_problems = UserAnswer.objects.filter(user=request.user).values_list('problem', flat=True)
+        attempted_problems = set(UserAnswer.objects.filter(user=request.user).values_list('problem', flat=True))
 
         if problems.exists():
             if request.method == 'POST':
@@ -59,40 +56,49 @@ def dailyprobblems(request):
                 selected_option = request.POST.get('selected_option')
                 solution_image_url = request.POST.get('solution_image_url', '')
 
-                # Check if the user has already attempted this problem
-                if problem_id in attempted_problems:
+                # Avoid duplicate submissions
+                if problem.id in attempted_problems:
                     return JsonResponse({'status': 'error', 'message': 'You have already attempted this question.'})
 
-                submission = UserAnswer(
-                    user=request.user,
-                    problem=problem,
-                    selected_option=selected_option,
-                    solution_image_url=solution_image_url,
-                    is_correct=(selected_option == str(problem.correct_option))
-                )
-                submission.save()
+                # Save or detect duplicate submission
+                try:
+                    submission, created = UserAnswer.objects.get_or_create(
+                        user=request.user,
+                        problem=problem,
+                        defaults={
+                            'selected_option': selected_option,
+                            'solution_image_url': solution_image_url,
+                            'is_correct': (selected_option == str(problem.correct_option)),
+                        }
+                    )
+                    if not created:
+                        return JsonResponse({'status': 'error', 'message': 'Duplicate submission detected.'})
 
-                # Update user stats
-                user = request.user
-                user.total_attempted = F('total_attempted') + 1
-                if submission.is_correct:
-                    user.total_correct = F('total_correct') + 1
+                    # Update total attempted and correct
+                    user = request.user
+                    user.total_attempted = F('total_attempted') + 1
+                    if submission.is_correct:
+                        user.total_correct = F('total_correct') + 1
 
-                # Update streak logic
-                today = localtime().date()
-                yesterday = today - timedelta(days=1)
-                solved_yesterday = UserAnswer.objects.filter(user=user, time_solved__date=yesterday).exists()
+                    # Update streak logic
+                    today = localtime().date()
+                    yesterday = today - timedelta(days=1)
+                    solved_yesterday = UserAnswer.objects.filter(user=user, time_solved__date=yesterday).exists()
 
-                if solved_yesterday:
-                    user.current_streak = F('current_streak') + 1
-                else:
-                    user.current_streak = 1
+                    if solved_yesterday:
+                        user.current_streak = F('current_streak') + 1
+                    else:
+                        user.current_streak = 1
 
-                if user.current_streak > user.highest_streak:
-                    user.highest_streak = F('current_streak')
+                    # Check for a new highest streak
+                    if user.current_streak > user.highest_streak:
+                        user.highest_streak = F('current_streak')
 
-                user.save()
-                return JsonResponse({'status': 'success', 'message': 'Submission successful.'})
+                    # Save user stats
+                    user.save()
+                    return JsonResponse({'status': 'success', 'message': 'Submission successful.'})
+                except IntegrityError:
+                    return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'})
             else:
                 return render(request, 'dailyprobblems.html', {
                     'problems': problems,
