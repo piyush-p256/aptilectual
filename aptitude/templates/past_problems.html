@@ -370,6 +370,13 @@
         .past-problems-container li button:hover {
             background-color: #2980b9;
         }
+        .question-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
          /* Footer Styles */
          footer {
     background: linear-gradient(90deg, #005b96 0%, #004c7d 100%);
@@ -516,7 +523,12 @@
                 <ul>
                     {% for problem in past_problems %}
                         <li>
-                            <p><strong>Question:</strong> {{ problem.question }}</p>
+                            <p><strong>Question:</strong> {{ problem.question|safe }}</p>
+                            {% if problem.questionimage %}
+                                <div class="question-image">
+                                    <img src="{{ problem.questionimage }}" alt="Question Image">
+                                </div>
+                            {% endif %}
                             <p><strong>Options:</strong></p>
                             <ul>
                                 <li>A. {{ problem.option1 }}</li>
@@ -537,6 +549,10 @@
             {% endif %}
         </section>
     </main>
+    
+
+
+
     <footer>
         <div class="footer-content">
             <div class="social-icons">
