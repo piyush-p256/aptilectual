@@ -11,4 +11,6 @@ urlpatterns = [
     path('daily_leaderboard/', views.daily_leaderboard, name='daily_leaderboard'),
     path('monthly_leaderboard/', views.monthly_leaderboard, name='monthly_leaderboard'),
     path('past_problems/', views.past_problems, name='past_problems'),
+    path('companywise/', views.companywise, name='companywise'),
+    path('company/<str:company_name>/', views.company_problems, name='company_problems'),
 ]

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Past Problems - Aptilectual</title>
+    <title>Company List - Aptilectual</title>
     <style>
         :root {
             --bg-color: #f4f7f9;
@@ -163,48 +163,51 @@
         main {
             padding-top: 5rem;
         }
-        .hero {
+        /* Company List Styles */
+        .company-list-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        h1 {
             text-align: center;
-            padding: 8rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-            line-height: 1.2;
-        }
-        .hero p {
-            font-size: 1.25rem;
-            margin-bottom: 2.5rem;
-            color: var(--text-color);
-            opacity: 0.8;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .feature {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .feature h2 {
             color: var(--primary-color);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+        .company-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+        .company-item {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .company-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .company-item a {
+            text-decoration: none;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+        .company-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
             margin-bottom: 1rem;
         }
-        .feature p {
-            color: var(--text-color);
-            opacity: 0.8;
+        .company-item p {
+            font-weight: 500;
+            text-align: center;
         }
         @media screen and (max-width: 768px) {
             .desktop-controls .auth-buttons {
@@ -293,6 +296,10 @@
             .nav-active li {
                 animation: navLinkFade 0.5s ease forwards 0.3s;
             }
+            .company-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 1rem;
+            }
         }
         @media screen and (min-width: 769px) {
             .mobile-auth {
@@ -306,72 +313,18 @@
             }
         }
         @media screen and (max-width: 480px) {
-            .hero {
-                padding: 4rem 1rem;
-            }
-            .hero h1 {
+            h1 {
                 font-size: 2rem;
             }
-            .hero p {
-                font-size: 1rem;
+            .company-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             }
-            .nav-links li a {
-                font-size: 1.25rem;
+            .company-item img {
+                height: 100px;
             }
         }
-        /* Past Problems Container */
-        .past-problems-container {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin: 2rem auto;
-            max-width: 800px;
-            text-align: left;
-        }
-        .past-problems-container h2 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-        .past-problems-container p {
-            color: var(--text-color);
-            opacity: 0.8;
-            margin-bottom: 1rem;
-        }
-        .past-problems-container ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .past-problems-container li {
-            background-color: var(--card-bg);
-            margin: 1rem 0;
-            padding: 1rem;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .past-problems-container li strong {
-            color: var(--primary-color);
-        }
-        .past-problems-container li .answer {
-            display: none;
-            margin-top: 1rem;
-            color: var(--secondary-color);
-            font-weight: bold;
-        }
-        .past-problems-container li button {
-            background-color: var(--primary-color);
-            color: #ffffff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .past-problems-container li button:hover {
-            background-color: #2980b9;
-        }
-         /* Footer Styles */
-         footer {
+        /* Footer Styles */
+        footer {
     background: linear-gradient(90deg, #005b96 0%, #004c7d 100%);
     color: #ffffff;
     padding: 1.5rem 2rem;
@@ -460,8 +413,9 @@
         text-align: center;
     }
 }
+        
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 </head>
@@ -510,34 +464,22 @@
     </header>
 
     <main>
-        <section class="past-problems-container">
-            <h2>Past Problems</h2>
-            {% if past_problems %}
-                <ul>
-                    {% for problem in past_problems %}
-                        <li>
-                            <p><strong>Question:</strong> {{ problem.question }}</p>
-                            <p><strong>Options:</strong></p>
-                            <ul>
-                                <li>A. {{ problem.option1 }}</li>
-                                <li>B. {{ problem.option2 }}</li>
-                                <li>C. {{ problem.option3 }}</li>
-                                <li>D. {{ problem.option4 }}</li>
-                            </ul>
-                            <button onclick="showAnswer(this)">Show Answer</button>
-                            <p class="answer">
-                                <strong>Correct Answer:</strong> Option {{ problem.correct_option }}<br>
-                                <strong>Answer URL:</strong> <a href="{{ problem.answerurl }}" target="_blank">{{ problem.answerurl }}</a>
-                            </p>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No past problems available.</p>
-            {% endif %}
-        </section>
+        <div class="company-list-container">
+            <h1>Company List</h1>
+            <div class="company-grid">
+                {% for company in companies %}
+                    <div class="company-item">
+                        <a href="{% url 'company_problems' company.name %}">
+                            <img src="{{ company.logo_url }}" alt="{{ company.name }}">
+                            <p>{{ company.name }}</p>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </main>
-    <footer>
+     <!-- Footer -->
+     <footer>
         <div class="footer-content">
             <div class="social-icons">
                 <a href="#" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
@@ -552,10 +494,13 @@
             </div>
         </div>
     </footer>
+    
+
 
     <script>
         document.getElementById("currentYear").textContent = new Date().getFullYear();
     </script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const themeToggle = document.getElementById('themeToggle');
@@ -631,16 +576,6 @@
                 });
             });
         }
-    
-        function showAnswer(button) {
-            const answer = button.nextElementSibling;
-            if (answer.style.display === 'none' || answer.style.display === '') {
-                answer.style.display = 'block';
-            } else {
-                answer.style.display = 'none';
-            }
-        }
     </script>
-    
 </body>
 </html>

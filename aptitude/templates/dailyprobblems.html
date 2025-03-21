@@ -6,7 +6,7 @@
     <title>Daily Problems - Aptilectual</title>
     <style>
         :root {
-            --bg-color: #f4f7f9;
+            --bg-color: #faf5f5;
             --text-color: #333333;
             --primary-color: #3498db;
             --secondary-color: #2ecc71;
@@ -496,132 +496,163 @@
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const forms = document.querySelectorAll('.problem-container form');
+     document.addEventListener('DOMContentLoaded', () => {
+    const forms = document.querySelectorAll('.problem-container form');
 
-            forms.forEach(form => {
-                form.addEventListener('submit', async (event) => {
-                    event.preventDefault(); // Prevent default form submission
+    forms.forEach(form => {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
 
-                    const formData = new FormData(form);
-                    const problemContainer = form.closest('.problem-container');
-                    const problemId = formData.get('problem_id');
+            const formData = new FormData(form);
+            const problemContainer = form.closest('.problem-container');
+            const problemId = formData.get('problem_id');
 
-                    try {
-                        const response = await fetch(form.action, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                            },
-                        });
-
-                        const result = await response.json();
-
-                        if (result.status === 'success') {
-                            // Hide the problem container
-                            problemContainer.style.display = 'none';
-
-                            // Check if all problems are solved
-                            const remainingProblems = document.querySelectorAll('.problem-container:not([style*="display: none"])');
-                            if (remainingProblems.length === 0) {
-                                const message = document.createElement('p');
-                                message.classList.add('notification');
-                                message.textContent = "Answers will be declared on the group.";
-                                document.querySelector('.form-container').appendChild(message);
-                            }
-                        } else if (result.status === 'error') {
-                            alert(result.message);
-                        }
-                    } catch (error) {
-                        console.error('Submission failed:', error);
-                    }
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
                 });
-            });
 
-            const themeToggle = document.getElementById('themeToggle');
-            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-            const savedTheme = localStorage.getItem('theme');
-            const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
-            document.body.classList.add(initialTheme);
-            updateThemeIcon(initialTheme);
+                const result = await response.json();
 
-            themeToggle.addEventListener('click', () => {
-                const isLightTheme = document.body.classList.contains('light-theme');
-                const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
-                document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
-                document.body.classList.add(newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateThemeIcon(newTheme);
-            });
+                if (result.status === 'success') {
+                    // Hide the problem container
+                    problemContainer.style.display = 'none';
 
-            prefersDarkScheme.addEventListener('change', (e) => {
-                if (!localStorage.getItem('theme')) {
-                    const newTheme = e.matches ? 'dark-theme' : 'light-theme';
-                    document.body.classList.remove('dark-theme', 'light-theme');
-                    document.body.classList.add(newTheme);
-                    updateThemeIcon(newTheme);
+                    // Check if all problems are solved
+                    const remainingProblems = document.querySelectorAll('.problem-container:not([style*="display: none"])');
+                    if (remainingProblems.length === 0) {
+                        const message = document.createElement('p');
+                        message.classList.add('notification');
+                        message.textContent = "Answers will be declared on the group.";
+                        document.querySelector('.form-container').appendChild(message);
+                    }
+                } else if (result.status === 'error') {
+                    alert(result.message);
                 }
-            });
-
-            initializeNavigation();
+            } catch (error) {
+                console.error('Submission failed:', error);
+            }
         });
+    });
 
-        function openUploadWidget(problemId) {
-            cloudinary.openUploadWidget({ cloud_name: 'dpmz5l34n', upload_preset: 'ml_default' },
-                (error, result) => {
-                    if (!error && result && result.event === "success") {
-                        document.getElementById(`solution_image_url_${problemId}`).value = result.info.secure_url;
-                    }
-                }
-            );
+    const themeToggle = document.getElementById('themeToggle');
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const savedTheme = localStorage.getItem('theme');
+    const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
+    document.body.classList.add(initialTheme);
+    updateThemeIcon(initialTheme);
+
+    themeToggle.addEventListener('click', () => {
+        const isLightTheme = document.body.classList.contains('light-theme');
+        const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
+        document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
+        document.body.classList.add(newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    });
+
+    prefersDarkScheme.addEventListener('change', (e) => {
+        if (!localStorage.getItem('theme')) {
+            const newTheme = e.matches ? 'dark-theme' : 'light-theme';
+            document.body.classList.remove('dark-theme', 'light-theme');
+            document.body.classList.add(newTheme);
+            updateThemeIcon(newTheme);
         }
+    });
 
-        function updateThemeIcon(theme) {
-            const themeToggle = document.getElementById('themeToggle');
-            themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
-        }
+    initializeNavigation();
+});
 
-        function initializeNavigation() {
-            const burger = document.querySelector('.burger');
-            const nav = document.querySelector('.nav-links');
-            const navLinks = document.querySelectorAll('.nav-links li');
-            const closeMenu = document.querySelector('.close-menu');
-
-            function toggleMenu() {
-                nav.classList.toggle('nav-active');
-                burger.classList.toggle('toggle');
+function openUploadWidget(problemId) {
+    cloudinary.openUploadWidget({ cloud_name: 'dpmz5l34n', upload_preset: 'ml_default' },
+        (error, result) => {
+            if (!error && result && result.event === "success") {
+                document.getElementById(`solution_image_url_${problemId}`).value = result.info.secure_url;
             }
+        }
+    );
+}
 
-            // Close menu when clicking outside
-            document.addEventListener('click', (e) => {
-                if (nav.classList.contains('nav-active') &&
-                    !nav.contains(e.target) &&
-                    !burger.contains(e.target)) {
-                    toggleMenu();
-                }
-            });
+function updateThemeIcon(theme) {
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.innerHTML = theme === 'dark-theme' ? '☀️' : '🌙';
+}
 
-            // Toggle menu on burger click
-            burger.addEventListener('click', (e) => {
-                e.stopPropagation();
+function initializeNavigation() {
+    const burger = document.querySelector('.burger');
+    const nav = document.querySelector('.nav-links');
+    const navLinks = document.querySelectorAll('.nav-links li');
+    const closeMenu = document.querySelector('.close-menu');
+
+    function toggleMenu() {
+        nav.classList.toggle('nav-active');
+        burger.classList.toggle('toggle');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (nav.classList.contains('nav-active') &&
+            !nav.contains(e.target) &&
+            !burger.contains(e.target)) {
+            toggleMenu();
+        }
+    });
+
+    // Toggle menu on burger click
+    burger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+    });
+
+    // Close menu on X button click
+    if (closeMenu) {
+        closeMenu.addEventListener('click', toggleMenu);
+    }
+
+    // Close menu when clicking a link
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (nav.classList.contains('nav-active')) {
                 toggleMenu();
-            });
-
-            // Close menu on X button click
-            if (closeMenu) {
-                closeMenu.addEventListener('click', toggleMenu);
             }
+        });
+    });
+}
 
-            // Close menu when clicking a link
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    if (nav.classList.contains('nav-active')) {
-                        toggleMenu();
-                    }
-                });
-            });
-        }
+    </script>
+
+    <script>
+        document.addEventListener("contextmenu", function (event) {
+    event.preventDefault(); // Disable right-click
+});
+
+document.addEventListener("keydown", function (event) {
+    // Disable Ctrl+U, Ctrl+S, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+Shift+J, and F12
+    if (
+        (event.ctrlKey && (event.key === "u" || event.key === "s")) ||
+        (event.ctrlKey && event.shiftKey && (event.key === "I" || event.key === "C" || event.key === "J")) ||
+        event.key === "F12"
+    ) {
+        event.preventDefault();
+    }
+});
+
+document.addEventListener("copy", function (event) {
+    event.preventDefault(); // Disable copy (Ctrl+C)
+});
+
+document.addEventListener("cut", function (event) {
+    event.preventDefault(); // Disable cut (Ctrl+X)
+});
+
+document.addEventListener("paste", function (event) {
+    event.preventDefault(); // Disable paste (Ctrl+V)
+});
+
     </script>
     <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
 </body>

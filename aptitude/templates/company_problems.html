@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Past Problems - Aptilectual</title>
+    <title>{{ company.name }} Problems - Aptilectual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --bg-color: #f4f7f9;
@@ -163,49 +165,188 @@
         main {
             padding-top: 5rem;
         }
-        .hero {
-            text-align: center;
-            padding: 8rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-            line-height: 1.2;
-        }
-        .hero p {
-            font-size: 1.25rem;
-            margin-bottom: 2.5rem;
-            color: var(--text-color);
-            opacity: 0.8;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .feature {
+        /* Company Details Container */
+        .company-details-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             background-color: var(--card-bg);
             padding: 2rem;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+            max-width: 800px;
+            text-align: center;
         }
-        .feature h2 {
+        .company-details-container .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .company-details-container .logo-container img {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 50%;
+        }
+        .company-details-container .details {
+            text-align: center;
+        }
+        .company-details-container .details h2 {
             color: var(--primary-color);
             margin-bottom: 1rem;
         }
-        .feature p {
+        .company-details-container .details p {
             color: var(--text-color);
             opacity: 0.8;
+            margin-bottom: 1rem;
         }
+        .company-details-container .details .btn {
+            margin-top: 1rem;
+        }
+        /* Company Problems Container */
+        .company-problems-container {
+            display: none;
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+            max-width: 800px;
+            text-align: left;
+        }
+        .company-problems-container h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        .company-problems-container p {
+            color: var(--text-color);
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+        .company-problems-container ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .company-problems-container li {
+            background-color: var(--card-bg);
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .company-problems-container li strong {
+            color: var(--primary-color);
+        }
+        .company-problems-container li .answer {
+            display: none;
+            margin-top: 1rem;
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+        .company-problems-container li button {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .company-problems-container li button:hover {
+            background-color: #2980b9;
+        }
+
+         /* Footer Styles */
+         footer {
+    background: linear-gradient(90deg, #005b96 0%, #004c7d 100%);
+    color: #ffffff;
+    padding: 1.5rem 2rem;
+    margin-top: auto;
+    border-radius: 30px;
+    margin: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+.social-icons {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.social-icons a {
+    color: #ffffff;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    opacity: 0.9;
+}
+
+.social-icons a:hover {
+    transform: translateY(-3px);
+    opacity: 1;
+}
+
+/* Center the text */
+.footer-text {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.footer-text i {
+    color: #ff4b4b;
+}
+
+/* Move the copyright closer to the right */
+.copyright {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    text-align: right;
+    flex-shrink: 0;
+    margin-right: 10px; /* Adjust the margin to move it closer */
+}
+    
+        @media screen and (max-width: 768px) {
+            .footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+        position: relative;
+    }
+
+    footer {
+        margin: 0.5rem;
+        padding: 1rem;
+    }
+
+    .footer-text {
+        position: static;
+        transform: none;
+        text-align: center;
+    }
+
+    .copyright {
+        text-align: center;
+    }
+}
         @media screen and (max-width: 768px) {
             .desktop-controls .auth-buttons {
                 display: none;
@@ -306,164 +447,26 @@
             }
         }
         @media screen and (max-width: 480px) {
-            .hero {
-                padding: 4rem 1rem;
+            .company-details-container, .company-problems-container {
+                padding: 1rem;
             }
-            .hero h1 {
-                font-size: 2rem;
-            }
-            .hero p {
-                font-size: 1rem;
+            .company-details-container h2, .company-problems-container h2 {
+                font-size: 1.5rem;
             }
             .nav-links li a {
                 font-size: 1.25rem;
             }
+            .company-details-container .logo-container img {
+                max-width: 100px;
+                max-height: 100px;
+            }
+            .company-details-container .details .btn {
+                width: 100%;
+            }
         }
-        /* Past Problems Container */
-        .past-problems-container {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin: 2rem auto;
-            max-width: 800px;
-            text-align: left;
-        }
-        .past-problems-container h2 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-        .past-problems-container p {
-            color: var(--text-color);
-            opacity: 0.8;
-            margin-bottom: 1rem;
-        }
-        .past-problems-container ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .past-problems-container li {
-            background-color: var(--card-bg);
-            margin: 1rem 0;
-            padding: 1rem;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .past-problems-container li strong {
-            color: var(--primary-color);
-        }
-        .past-problems-container li .answer {
-            display: none;
-            margin-top: 1rem;
-            color: var(--secondary-color);
-            font-weight: bold;
-        }
-        .past-problems-container li button {
-            background-color: var(--primary-color);
-            color: #ffffff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .past-problems-container li button:hover {
-            background-color: #2980b9;
-        }
-         /* Footer Styles */
-         footer {
-    background: linear-gradient(90deg, #005b96 0%, #004c7d 100%);
-    color: #ffffff;
-    padding: 1.5rem 2rem;
-    margin-top: auto;
-    border-radius: 30px;
-    margin: 1rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-}
-
-.footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    position: relative;
-}
-
-.social-icons {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.social-icons a {
-    color: #ffffff;
-    font-size: 1.5rem;
-    transition: all 0.3s ease;
-    opacity: 0.9;
-}
-
-.social-icons a:hover {
-    transform: translateY(-3px);
-    opacity: 1;
-}
-
-/* Center the text */
-.footer-text {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    white-space: nowrap;
-}
-
-.footer-text i {
-    color: #ff4b4b;
-}
-
-/* Move the copyright closer to the right */
-.copyright {
-    font-size: 0.9rem;
-    opacity: 0.9;
-    text-align: right;
-    flex-shrink: 0;
-    margin-right: 10px; /* Adjust the margin to move it closer */
-}
-    
-        @media screen and (max-width: 768px) {
-            .footer-content {
-        flex-direction: column;
-        text-align: center;
-        gap: 1rem;
-        position: relative;
-    }
-
-    footer {
-        margin: 0.5rem;
-        padding: 1rem;
-    }
-
-    .footer-text {
-        position: static;
-        transform: none;
-        text-align: center;
-    }
-
-    .copyright {
-        text-align: center;
-    }
-}
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 </head>
 <body>
     <!-- Header -->
@@ -510,11 +513,23 @@
     </header>
 
     <main>
-        <section class="past-problems-container">
-            <h2>Past Problems</h2>
-            {% if past_problems %}
+        <section class="company-details-container">
+            <div class="logo-container">
+                <img src="{{ company.logo_url }}" alt="{{ company.name }} Logo">
+            </div>
+            <div class="details">
+                <h2>{{ company.name }}</h2>
+                <p><strong>Hired Last Year:</strong> {{ company.hired_last_year }}</p>
+                <p><strong>Description:</strong> {{ company.description }}</p>
+                <button class="btn btn-primary" onclick="showProblems()">Aptitude Questions</button>
+            </div>
+        </section>
+
+        <section class="company-problems-container" id="companyProblems">
+            <h2>{{ company.name }} Problems</h2>
+            {% if problems %}
                 <ul>
-                    {% for problem in past_problems %}
+                    {% for problem in problems %}
                         <li>
                             <p><strong>Question:</strong> {{ problem.question }}</p>
                             <p><strong>Options:</strong></p>
@@ -525,7 +540,7 @@
                                 <li>D. {{ problem.option4 }}</li>
                             </ul>
                             <button onclick="showAnswer(this)">Show Answer</button>
-                            <p class="answer">
+                            <p class="answer" style="display: none;">
                                 <strong>Correct Answer:</strong> Option {{ problem.correct_option }}<br>
                                 <strong>Answer URL:</strong> <a href="{{ problem.answerurl }}" target="_blank">{{ problem.answerurl }}</a>
                             </p>
@@ -533,7 +548,7 @@
                     {% endfor %}
                 </ul>
             {% else %}
-                <p>No past problems available.</p>
+                <p>No problems available for {{ company.name }}.</p>
             {% endif %}
         </section>
     </main>
@@ -553,6 +568,7 @@
         </div>
     </footer>
 
+
     <script>
         document.getElementById("currentYear").textContent = new Date().getFullYear();
     </script>
@@ -564,7 +580,7 @@
             const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
             document.body.classList.add(initialTheme);
             updateThemeIcon(initialTheme);
-    
+
             themeToggle.addEventListener('click', () => {
                 const isLightTheme = document.body.classList.contains('light-theme');
                 const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
@@ -573,7 +589,7 @@
                 localStorage.setItem('theme', newTheme);
                 updateThemeIcon(newTheme);
             });
-    
+
             prefersDarkScheme.addEventListener('change', (e) => {
                 if (!localStorage.getItem('theme')) {
                     const newTheme = e.matches ? 'dark-theme' : 'light-theme';
@@ -582,26 +598,26 @@
                     updateThemeIcon(newTheme);
                 }
             });
-    
+
             initializeNavigation();
         });
-    
+
         function updateThemeIcon(theme) {
             const themeToggle = document.getElementById('themeToggle');
             themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
         }
-    
+
         function initializeNavigation() {
             const burger = document.querySelector('.burger');
             const nav = document.querySelector('.nav-links');
             const navLinks = document.querySelectorAll('.nav-links li');
             const closeMenu = document.querySelector('.close-menu');
-    
+
             function toggleMenu() {
                 nav.classList.toggle('nav-active');
                 burger.classList.toggle('toggle');
             }
-    
+
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (nav.classList.contains('nav-active') &&
@@ -610,18 +626,18 @@
                     toggleMenu();
                 }
             });
-    
+
             // Toggle menu on burger click
             burger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleMenu();
             });
-    
+
             // Close menu on X button click
             if (closeMenu) {
                 closeMenu.addEventListener('click', toggleMenu);
             }
-    
+
             // Close menu when clicking a link
             navLinks.forEach(link => {
                 link.addEventListener('click', () => {
@@ -631,16 +647,26 @@
                 });
             });
         }
-    
+
         function showAnswer(button) {
             const answer = button.nextElementSibling;
             if (answer.style.display === 'none' || answer.style.display === '') {
                 answer.style.display = 'block';
+                button.textContent = 'Hide Answer';
             } else {
                 answer.style.display = 'none';
+                button.textContent = 'Show Answer';
+            }
+        }
+
+        function showProblems() {
+            const problemsContainer = document.getElementById('companyProblems');
+            if (problemsContainer.style.display === 'none' || problemsContainer.style.display === '') {
+                problemsContainer.style.display = 'block';
+            } else {
+                problemsContainer.style.display = 'none';
             }
         }
     </script>
-    
 </body>
 </html>
