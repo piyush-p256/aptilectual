@@ -393,6 +393,12 @@
         .hidden {
             display: none;
         }
+        .question-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
@@ -447,45 +453,50 @@
             {% if message %}
                 <p>{{ message }}</p>
             {% elif problems %}
-                {% for problem in problems %}
-                    <div class="problem-container {% if problem.id in attempted_problems %}hidden{% endif %}" id="problem-{{ problem.id }}">
-                        <h2>{{ problem.question }}</h2>
-                        {% if problem.id in attempted_problems %}
-                            <p>You have already attempted this question.</p>
-                        {% else %}
-                            <form id="problem-form-{{ problem.id }}" action="{% url 'dailyprobblems' %}" method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="problem_id" value="{{ problem.id }}">
-                                <div class="form-group">
-                                    <label>
-                                        <input type="radio" name="selected_option" value="1" required>
-                                        {{ problem.option1 }}
-                                    </label><br>
-                                    <label>
-                                        <input type="radio" name="selected_option" value="2" required>
-                                        {{ problem.option2 }}
-                                    </label><br>
-                                    <label>
-                                        <input type="radio" name="selected_option" value="3" required>
-                                        {{ problem.option3 }}
-                                    </label><br>
-                                    <label>
-                                        <input type="radio" name="selected_option" value="4" required>
-                                        {{ problem.option4 }}
-                                    </label><br>
-                                </div>
-                                <div class="form-group">
-                                    <label for="solution_image_url_{{ problem.id }}">Solution Image URL (optional):</label>
-                                    <input type="url" id="solution_image_url_{{ problem.id }}" name="solution_image_url">
-                                </div>
-                                <div class="form-actions">
-                                    <button type="button" class="upload-btn" onclick="openUploadWidget({{ problem.id }})">Upload Solution Image</button>
-                                    <button type="submit" class="submit-btn">Submit</button>
-                                </div>
-                            </form>
-                        {% endif %}
+            {% for problem in problems %}
+            <div class="problem-container {% if problem.id in attempted_problems %}hidden{% endif %}" id="problem-{{ problem.id }}">
+                <h2>{{ problem.question|safe }}</h2>
+                {% if problem.questionimage %}
+                    <div class="question-image">
+                        <img src="{{ problem.questionimage }}" alt="Question Image">
                     </div>
-                {% endfor %}
+                {% endif %}
+                {% if problem.id in attempted_problems %}
+                    <p>You have already attempted this question.</p>
+                {% else %}
+                    <form id="problem-form-{{ problem.id }}" action="{% url 'dailyprobblems' %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="problem_id" value="{{ problem.id }}">
+                        <div class="form-group">
+                            <label>
+                                <input type="radio" name="selected_option" value="1" required>
+                                {{ problem.option1 }}
+                            </label><br>
+                            <label>
+                                <input type="radio" name="selected_option" value="2" required>
+                                {{ problem.option2 }}
+                            </label><br>
+                            <label>
+                                <input type="radio" name="selected_option" value="3" required>
+                                {{ problem.option3 }}
+                            </label><br>
+                            <label>
+                                <input type="radio" name="selected_option" value="4" required>
+                                {{ problem.option4 }}
+                            </label><br>
+                        </div>
+                        <div class="form-group">
+                            <label for="solution_image_url_{{ problem.id }}">Solution Image URL (optional):</label>
+                            <input type="url" id="solution_image_url_{{ problem.id }}" name="solution_image_url">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="upload-btn" onclick="openUploadWidget({{ problem.id }})">Upload Solution Image</button>
+                            <button type="submit" class="submit-btn">Submit</button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        {% endfor %}
                 {% if not problems %}
                     <p>Answers will be revealed in the WhatsApp group.</p>
                 {% endif %}
@@ -496,163 +507,160 @@
     </main>
 
     <script>
-     document.addEventListener('DOMContentLoaded', () => {
-    const forms = document.querySelectorAll('.problem-container form');
+        document.addEventListener('DOMContentLoaded', () => {
+            const forms = document.querySelectorAll('.problem-container form');
 
-    forms.forEach(form => {
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Prevent default form submission
+            forms.forEach(form => {
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault(); // Prevent default form submission
 
-            const formData = new FormData(form);
-            const problemContainer = form.closest('.problem-container');
-            const problemId = formData.get('problem_id');
+                    const formData = new FormData(form);
+                    const problemContainer = form.closest('.problem-container');
+                    const problemId = formData.get('problem_id');
 
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                });
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
 
-                const result = await response.json();
+                        const result = await response.json();
 
-                if (result.status === 'success') {
-                    // Hide the problem container
-                    problemContainer.style.display = 'none';
+                        if (result.status === 'success') {
+                            // Hide the problem container
+                            problemContainer.style.display = 'none';
 
-                    // Check if all problems are solved
-                    const remainingProblems = document.querySelectorAll('.problem-container:not([style*="display: none"])');
-                    if (remainingProblems.length === 0) {
-                        const message = document.createElement('p');
-                        message.classList.add('notification');
-                        message.textContent = "Answers will be declared on the group.";
-                        document.querySelector('.form-container').appendChild(message);
+                            // Check if all problems are solved
+                            const remainingProblems = document.querySelectorAll('.problem-container:not([style*="display: none"])');
+                            if (remainingProblems.length === 0) {
+                                const message = document.createElement('p');
+                                message.classList.add('notification');
+                                message.textContent = "Answers will be declared on the group.";
+                                document.querySelector('.form-container').appendChild(message);
+                            }
+                        } else if (result.status === 'error') {
+                            alert(result.message);
+                        }
+                    } catch (error) {
+                        console.error('Submission failed:', error);
                     }
-                } else if (result.status === 'error') {
-                    alert(result.message);
+                });
+            });
+
+            const themeToggle = document.getElementById('themeToggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            const savedTheme = localStorage.getItem('theme');
+            const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
+            document.body.classList.add(initialTheme);
+            updateThemeIcon(initialTheme);
+
+            themeToggle.addEventListener('click', () => {
+                const isLightTheme = document.body.classList.contains('light-theme');
+                const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
+                document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
+                document.body.classList.add(newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
+            });
+
+            prefersDarkScheme.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    const newTheme = e.matches ? 'dark-theme' : 'light-theme';
+                    document.body.classList.remove('dark-theme', 'light-theme');
+                    document.body.classList.add(newTheme);
+                    updateThemeIcon(newTheme);
                 }
-            } catch (error) {
-                console.error('Submission failed:', error);
-            }
+            });
+
+            initializeNavigation();
         });
-    });
 
-    const themeToggle = document.getElementById('themeToggle');
-    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-    const savedTheme = localStorage.getItem('theme');
-    const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
-    document.body.classList.add(initialTheme);
-    updateThemeIcon(initialTheme);
-
-    themeToggle.addEventListener('click', () => {
-        const isLightTheme = document.body.classList.contains('light-theme');
-        const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
-        document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
-        document.body.classList.add(newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcon(newTheme);
-    });
-
-    prefersDarkScheme.addEventListener('change', (e) => {
-        if (!localStorage.getItem('theme')) {
-            const newTheme = e.matches ? 'dark-theme' : 'light-theme';
-            document.body.classList.remove('dark-theme', 'light-theme');
-            document.body.classList.add(newTheme);
-            updateThemeIcon(newTheme);
+        function openUploadWidget(problemId) {
+            cloudinary.openUploadWidget({ cloud_name: 'dpmz5l34n', upload_preset: 'ml_default' },
+                (error, result) => {
+                    if (!error && result && result.event === "success") {
+                        document.getElementById(`solution_image_url_${problemId}`).value = result.info.secure_url;
+                    }
+                }
+            );
         }
-    });
 
-    initializeNavigation();
-});
+        function updateThemeIcon(theme) {
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.innerHTML = theme === 'dark-theme' ? '☀️' : '🌙';
+        }
 
-function openUploadWidget(problemId) {
-    cloudinary.openUploadWidget({ cloud_name: 'dpmz5l34n', upload_preset: 'ml_default' },
-        (error, result) => {
-            if (!error && result && result.event === "success") {
-                document.getElementById(`solution_image_url_${problemId}`).value = result.info.secure_url;
+        function initializeNavigation() {
+            const burger = document.querySelector('.burger');
+            const nav = document.querySelector('.nav-links');
+            const navLinks = document.querySelectorAll('.nav-links li');
+            const closeMenu = document.querySelector('.close-menu');
+
+            function toggleMenu() {
+                nav.classList.toggle('nav-active');
+                burger.classList.toggle('toggle');
             }
-        }
-    );
-}
 
-function updateThemeIcon(theme) {
-    const themeToggle = document.getElementById('themeToggle');
-    themeToggle.innerHTML = theme === 'dark-theme' ? '☀️' : '🌙';
-}
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (nav.classList.contains('nav-active') &&
+                    !nav.contains(e.target) &&
+                    !burger.contains(e.target)) {
+                    toggleMenu();
+                }
+            });
 
-function initializeNavigation() {
-    const burger = document.querySelector('.burger');
-    const nav = document.querySelector('.nav-links');
-    const navLinks = document.querySelectorAll('.nav-links li');
-    const closeMenu = document.querySelector('.close-menu');
-
-    function toggleMenu() {
-        nav.classList.toggle('nav-active');
-        burger.classList.toggle('toggle');
-    }
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (nav.classList.contains('nav-active') &&
-            !nav.contains(e.target) &&
-            !burger.contains(e.target)) {
-            toggleMenu();
-        }
-    });
-
-    // Toggle menu on burger click
-    burger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleMenu();
-    });
-
-    // Close menu on X button click
-    if (closeMenu) {
-        closeMenu.addEventListener('click', toggleMenu);
-    }
-
-    // Close menu when clicking a link
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (nav.classList.contains('nav-active')) {
+            // Toggle menu on burger click
+            burger.addEventListener('click', (e) => {
+                e.stopPropagation();
                 toggleMenu();
+            });
+
+            // Close menu on X button click
+            if (closeMenu) {
+                closeMenu.addEventListener('click', toggleMenu);
             }
-        });
-    });
-}
 
+            // Close menu when clicking a link
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (nav.classList.contains('nav-active')) {
+                        toggleMenu();
+                    }
+                });
+            });
+        }
     </script>
-
     <script>
         document.addEventListener("contextmenu", function (event) {
-    event.preventDefault(); // Disable right-click
-});
+            event.preventDefault(); // Disable right-click
+        });
 
-document.addEventListener("keydown", function (event) {
-    // Disable Ctrl+U, Ctrl+S, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+Shift+J, and F12
-    if (
-        (event.ctrlKey && (event.key === "u" || event.key === "s")) ||
-        (event.ctrlKey && event.shiftKey && (event.key === "I" || event.key === "C" || event.key === "J")) ||
-        event.key === "F12"
-    ) {
-        event.preventDefault();
-    }
-});
+        document.addEventListener("keydown", function (event) {
+            // Disable Ctrl+U, Ctrl+S, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+Shift+J, and F12
+            if (
+                (event.ctrlKey && (event.key === "u" || event.key === "s")) ||
+                (event.ctrlKey && event.shiftKey && (event.key === "I" || event.key === "C" || event.key === "J")) ||
+                event.key === "F12"
+            ) {
+                event.preventDefault();
+            }
+        });
 
-document.addEventListener("copy", function (event) {
-    event.preventDefault(); // Disable copy (Ctrl+C)
-});
+        document.addEventListener("copy", function (event) {
+            event.preventDefault(); // Disable copy (Ctrl+C)
+        });
 
-document.addEventListener("cut", function (event) {
-    event.preventDefault(); // Disable cut (Ctrl+X)
-});
+        document.addEventListener("cut", function (event) {
+            event.preventDefault(); // Disable cut (Ctrl+X)
+        });
 
-document.addEventListener("paste", function (event) {
-    event.preventDefault(); // Disable paste (Ctrl+V)
-});
-
+        document.addEventListener("paste", function (event) {
+            event.preventDefault(); // Disable paste (Ctrl+V)
+        });
     </script>
     <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
 </body>

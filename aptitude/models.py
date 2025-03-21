@@ -82,7 +82,8 @@ class Problem(models.Model):
     done = models.BooleanField(default=False, null=True, blank=True)
     answerurl = models.URLField(null=True, blank=True)
     companyname = models.CharField(max_length=255, null=True, blank=True)
-
+    test_id = models.IntegerField(null=True, blank=True)
+    questionimage = models.URLField(null=True, blank=True) 
     def __str__(self):
         return self.question or "No question"
 
