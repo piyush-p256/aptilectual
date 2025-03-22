@@ -13,4 +13,7 @@ urlpatterns = [
     path('past_problems/', views.past_problems, name='past_problems'),
     path('companywise/', views.companywise, name='companywise'),
     path('company/<str:company_name>/', views.company_problems, name='company_problems'),
+    path('test/<int:test_id>/', views.test_view, name='test_view'),
+    path('test_leaderboard/<int:test_id>/', views.test_leaderboard, name='test_leaderboard'),
+    path('user_attempted_questions/<int:test_id>/<int:user_id>/', views.user_attempted_questions, name='user_attempted_questions'),
 ]

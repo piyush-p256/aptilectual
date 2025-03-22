@@ -10,6 +10,7 @@ from django.db.utils import IntegrityError
 from datetime import timedelta
 from .models import Problem, UserAnswer, CustomUser, LeaderDaily, Company
 from .forms import SignUpForm, LoginForm, SubmissionForm
+from .models import Problem, TestAnswer
 
 def signup(request):
     if request.method == 'POST':
@@ -206,3 +207,104 @@ def company_problems(request, company_name):
         'company': company,  # Pass the Company object to the template
         'problems': problems
     })
+
+
+@login_required
+def test_view(request, test_id):
+    now = timezone.now()
+    problems = Problem.objects.filter(test_id=test_id, is_active=True, done=False)
+    attempted_problems = set(TestAnswer.objects.filter(user=request.user, test_id=test_id).values_list('problem', flat=True))
+
+    if problems.exists():
+        if request.method == 'POST':
+            problem_id = request.POST.get('problem_id')
+            problem = get_object_or_404(Problem, id=problem_id, test_id=test_id, is_active=True, done=False)
+            selected_option = request.POST.get('selected_option')
+            solution_image_url = request.POST.get('solution_image_url', '')
+
+            # Avoid duplicate submissions
+            if problem.id in attempted_problems:
+                return JsonResponse({'status': 'error', 'message': 'You have already attempted this question.'})
+
+            # Save or detect duplicate submission
+            try:
+                submission, created = TestAnswer.objects.get_or_create(
+                    user=request.user,
+                    problem=problem,
+                    test_id=test_id,
+                    defaults={
+                        'selected_option': selected_option,
+                        'solution_image_url': solution_image_url,
+                        'is_correct': (selected_option == str(problem.correct_option)),
+                    }
+                )
+                if not created:
+                    return JsonResponse({'status': 'error', 'message': 'Duplicate submission detected.'})
+
+                # Update total attempted and correct
+                user = request.user
+                user.total_attempted = F('total_attempted') + 1
+                if submission.is_correct:
+                    user.total_correct = F('total_correct') + 1
+
+                # Save user stats
+                user.save()
+                return JsonResponse({'status': 'success', 'message': 'Submission successful.'})
+            except IntegrityError:
+                return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'})
+        else:
+            return render(request, 'test.html', {
+                'problems': problems,
+                'attempted_problems': attempted_problems,
+                'test_id': test_id
+            })
+    else:
+        return render(request, 'test.html', {'message': 'No problems available for this test.'})
+    
+@login_required
+def test_leaderboard(request, test_id):
+    now = timezone.now()
+    start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_time = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    users_with_answers = TestAnswer.objects.filter(time_solved__range=(start_time, end_time), test_id=test_id)
+    users = CustomUser.objects.filter(id__in=users_with_answers.values_list('user', flat=True)).annotate(
+        correct_answers_today=Count('testanswer', filter=Q(testanswer__is_correct=True, testanswer__time_solved__range=(start_time, end_time), testanswer__test_id=test_id)),
+        total_answers_today=Count('testanswer', filter=Q(testanswer__time_solved__range=(start_time, end_time), testanswer__test_id=test_id)),
+        min_time_solved=Min('testanswer__time_solved', filter=Q(testanswer__is_correct=True, testanswer__time_solved__range=(start_time, end_time), testanswer__test_id=test_id))
+    ).order_by('-correct_answers_today', 'min_time_solved')
+
+    leaderboard_data = []
+    for rank, user in enumerate(users, start=1):
+        leaderboard_data.append({
+            'rank': rank,
+            'username': user.username,
+            'correct_answers': user.correct_answers_today,
+            'total_answers': user.total_answers_today,
+            'user_id': user.id,
+            'is_current_user': user.id == request.user.id  # Flag to indicate if the user is the current user
+        })
+
+    return render(request, 'test_leaderboard.html', {'leaderboard_data': leaderboard_data, 'test_id': test_id})
+
+
+@login_required
+def user_attempted_questions(request, test_id, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    attempted_questions = TestAnswer.objects.filter(user=user, test_id=test_id).select_related('problem')
+
+    attempted_data = []
+    for attempt in attempted_questions:
+        attempted_data.append({
+            'question': attempt.problem.question,
+            'selected_option': attempt.selected_option,
+            'is_correct': attempt.is_correct,
+            'correct_option': attempt.problem.correct_option,
+            'explanation': getattr(attempt.problem, 'explanation', ''),
+            'option1': attempt.problem.option1,
+            'option2': attempt.problem.option2,
+            'option3': attempt.problem.option3,
+            'option4': attempt.problem.option4,
+        })
+
+    return render(request, 'user_attempted_questions.html', {'attempted_data': attempted_data, 'test_id': test_id})

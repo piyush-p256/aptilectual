@@ -114,3 +114,16 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
+    
+class TestAnswer(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    problem = models.ForeignKey('Problem', on_delete=models.CASCADE)
+    selected_option = models.CharField(max_length=1)
+    solution_image_url = models.URLField(null=True, blank=True)
+    is_correct = models.BooleanField(default=False)
+    time_solved = models.DateTimeField(auto_now_add=True)
+    test_id = models.IntegerField()
+
+    def __str__(self):
+        return f"TestAnswer by {self.user.username} for Problem {self.problem.id} (Test ID: {self.test_id})"
+    
