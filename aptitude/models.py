@@ -127,3 +127,14 @@ class TestAnswer(models.Model):
     def __str__(self):
         return f"TestAnswer by {self.user.username} for Problem {self.problem.id} (Test ID: {self.test_id})"
     
+class Test(models.Model):
+    test_id = models.IntegerField(primary_key=True)
+    test_name = models.CharField(max_length=255)
+    duration_in_hours = models.FloatField(null=True, blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
+
+    def is_start_time_reached(self):
+        return timezone.now() >= self.start_time
+
+    def __str__(self):
+        return self.test_name

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Problems - Aptilectual</title>
+    <title>Test Instructions - Aptilectual</title>
     <style>
         :root {
             --bg-color: #faf5f5;
@@ -162,49 +162,43 @@
         }
         main {
             padding-top: 5rem;
-        }
-        .hero {
             text-align: center;
-            padding: 8rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
         }
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-            line-height: 1.2;
-        }
-        .hero p {
-            font-size: 1.25rem;
-            margin-bottom: 2.5rem;
-            color: var(--text-color);
-            opacity: 0.8;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .feature {
+        .instructions-container {
             background-color: var(--card-bg);
             padding: 2rem;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+            max-width: 800px;
         }
-        .feature h2 {
+        .instructions-container h2 {
             color: var(--primary-color);
             margin-bottom: 1rem;
         }
-        .feature p {
+        .instructions-container p {
             color: var(--text-color);
             opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+        .countdown {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+        }
+        .start-btn {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 2rem;
+        }
+        .start-btn:hover {
+            background-color: #2980b9;
         }
         @media screen and (max-width: 768px) {
             .desktop-controls .auth-buttons {
@@ -319,91 +313,6 @@
                 font-size: 1.25rem;
             }
         }
-        /* Problem Container */
-        .problem-container {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-        .problem-container h2 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-        .problem-container p {
-            color: var(--text-color);
-            opacity: 0.8;
-            margin-bottom: 1rem;
-        }
-        .problem-container .options {
-            list-style-type: none;
-            padding: 0;
-        }
-        .problem-container .options li {
-            margin-bottom: 1rem;
-        }
-        .problem-container .options li input {
-            margin-right: 0.5rem;
-        }
-        .problem-container .submit-btn {
-            background-color: var(--primary-color);
-            color: #ffffff;
-            border: none;
-            padding: 0.75rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .problem-container .submit-btn:hover {
-            background-color: #2980b9;
-        }
-        .problem-container .submit-btn:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .problem-container .message {
-            margin-top: 1rem;
-            color: var(--accent-color);
-        }
-        .notification {
-            background-color: var(--accent-color);
-            color: #ffffff;
-            padding: 1rem;
-            border-radius: 5px;
-            text-align: center;
-            margin-top: 2rem;
-        }
-        .cloudinary-widget {
-            margin-top: 1rem;
-        }
-        .upload-btn {
-            background-color: var(--secondary-color);
-            color: #ffffff;
-            border: none;
-            padding: 0.75rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 1rem;
-        }
-        .upload-btn:hover {
-            background-color: #27ae60;
-        }
-        .hidden {
-            display: none;
-        }
-        .question-image img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-        }
-        .timer {
-            font-size: 1.5rem;
-            margin-top: 2rem;
-            color: var(--accent-color);
-        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
@@ -452,102 +361,19 @@
     </header>
 
     <main>
-        <section class="form-container">
-            <h1>Test Problems (Test ID: {{ test.test_name }})</h1>
-            <div class="timer" id="timer">Time Left: </div>
-            {% if message %}
-                <p>{{ message }}</p>
-            {% elif problems %}
-                {% for problem in problems %}
-                    <div class="problem-container {% if problem.id in attempted_problems %}hidden{% endif %}" id="problem-{{ problem.id }}">
-                        <h2>{{ problem.question|safe }}</h2>
-                        {% if problem.questionimage %}
-                            <div class="question-image">
-                                <img src="{{ problem.questionimage }}" alt="Question Image">
-                            </div>
-                        {% endif %}
-                        {% if problem.id in attempted_problems %}
-                            <p>You have already attempted this question.</p>
-                        {% else %}
-                            <form id="problem-form-{{ problem.id }}" action="{% url 'test_view' test_id=test_id %}" method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="problem_id" value="{{ problem.id }}">
-                                <div class="form-group">
-                                    <label>
-                                        <input type="radio" name="selected_option" value="1" required>
-                                        {{ problem.option1 }}
-                                    </label><br>
-                                    <label>
-                                        <input type="radio" name="selected_option" value="2" required>
-                                        {{ problem.option2 }}
-                                    </label><br>
-                                    <label>
-                                        <input type="radio" name="selected_option" value="3" required>
-                                        {{ problem.option3 }}
-                                    </label><br>
-                                    <label>
-                                        <input type="radio" name="selected_option" value="4" required>
-                                        {{ problem.option4 }}
-                                    </label><br>
-                                </div>
-                                <div class="form-actions">
-                                    <button type="submit" class="submit-btn">Submit</button>
-                                </div>
-                            </form>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p>No problems available for this test.</p>
-            {% endif %}
+        <section class="instructions-container">
+            <h2>Instructions for {{ test.test_name }}</h2>
+            <p>This test will be of {{ test.duration_in_hours }} hours.</p>
+            <p>Only submit an answer when you are sure as it cannot be reversed.</p>
+            <p>The test will start in: <span class="countdown" id="countdown"></span></p>
+            <a href="{% url 'start_test' test.test_id %}" class="start-btn" id="startTestBtn" style="pointer-events: none; opacity: 0.5;">
+                Start Test
+            </a>
         </section>
     </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const forms = document.querySelectorAll('.problem-container form');
-
-            forms.forEach(form => {
-                form.addEventListener('submit', async (event) => {
-                    event.preventDefault(); // Prevent default form submission
-
-                    const formData = new FormData(form);
-                    const problemContainer = form.closest('.problem-container');
-                    const problemId = formData.get('problem_id');
-
-                    try {
-                        const response = await fetch(form.action, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                            },
-                        });
-
-                        const result = await response.json();
-
-if (result.status === 'success') {
-    // Hide the problem container
-    problemContainer.style.display = 'none';
-
-    // Check if all problems are solved
-    const remainingProblems = document.querySelectorAll('.problem-container:not([style*="display: none"])');
-    if (remainingProblems.length === 0) {
-        document.getElementById('timer').style.display = 'none'; // Hide the timer
-        const message = document.createElement('p');
-        message.classList.add('notification');
-        message.innerHTML = ' <a href="{% url "test_leaderboard" test_id=test_id %}" class="btn btn-primary">See Leaderboard</a>';
-        document.querySelector('.form-container').appendChild(message);
-    }
-} else if (result.status === 'error') {
-    alert(result.message);
-}
-} catch (error) {
-console.error('Submission failed:', error);
-}
-});
-});
-
             const themeToggle = document.getElementById('themeToggle');
             const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
             const savedTheme = localStorage.getItem('theme');
@@ -575,43 +401,40 @@ console.error('Submission failed:', error);
 
             initializeNavigation();
 
-            const timerElement = document.getElementById('timer');
+            const countdownElement = document.getElementById('countdown');
 
-// Get test start time and duration from Django template
-const testStartTime = new Date("{{ test.start_time|date:'Y-m-d H:i:s' }}"); // Convert Django DateTime to JS Date
-const testDuration = {{ test.duration_in_hours }} * 60 * 60 * 1000; // Convert hours to milliseconds
-const endTime = new Date(testStartTime.getTime() + testDuration); // Calculate end time
+    const startButton = document.getElementById('startTestBtn');
 
-const interval = setInterval(() => {
-    const now = new Date();
-    let timeLeft = Math.max(0, endTime - now); // Ensure timeLeft is not negative
+    // Get test start time from Django template and convert it to a Date object
+    const testStartTime = new Date("{{ test.start_time|date:'Y-m-d H:i:s' }}").getTime();
+    
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const timeLeft = testStartTime - now;
 
-    if (timeLeft <= 0) {
-        clearInterval(interval);
-        timerElement.textContent = "Time's up!";
-        
-        // Hide problems
-        document.querySelectorAll('.problem-container').forEach(container => {
-            container.style.display = 'none';
-        });
+        if (timeLeft > 0) {
+            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
-        // Prevent duplicate message
-        if (!document.querySelector('.notification')) {
-            const message = document.createElement('p');
-            message.classList.add('notification');
-            message.innerHTML = '<a href="{% url "test_leaderboard" test_id=test_id %}" class="btn btn-primary">See Leaderboard</a>';
-            document.querySelector('.form-container').appendChild(message);
+            countdownElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
+        } else {
+            clearInterval(interval);
+            countdownElement.textContent = "Test has started!";
+
+            // Enable the button when the test starts
+            startButton.style.pointerEvents = "auto"; 
+            startButton.style.opacity = "1";
         }
-        return;
     }
 
-    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+    // Initial call to prevent delay
+    updateCountdown();
 
-    timerElement.textContent = `Time Left: ${hours}h ${minutes}m ${seconds}s`;
-}, 1000);
+    // Update countdown every second
+    const interval = setInterval(updateCountdown, 1000);
 });
+
         function updateThemeIcon(theme) {
             const themeToggle = document.getElementById('themeToggle');
             themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
@@ -657,34 +480,6 @@ const interval = setInterval(() => {
                 });
             });
         }
-    </script>
-    <script>
-        document.addEventListener("contextmenu", function (event) {
-            event.preventDefault(); // Disable right-click
-        });
-
-        document.addEventListener("keydown", function (event) {
-            // Disable Ctrl+U, Ctrl+S, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+Shift+J, and F12
-            if (
-                (event.ctrlKey && (event.key === "u" || event.key === "s")) ||
-                (event.ctrlKey && event.shiftKey && (event.key === "I" || event.key === "C" || event.key === "J")) ||
-                event.key === "F12"
-            ) {
-                event.preventDefault();
-            }
-        });
-
-        document.addEventListener("copy", function (event) {
-            event.preventDefault(); // Disable copy (Ctrl+C)
-        });
-
-        document.addEventListener("cut", function (event) {
-            event.preventDefault(); // Disable cut (Ctrl+X)
-        });
-
-        document.addEventListener("paste", function (event) {
-            event.preventDefault(); // Disable paste (Ctrl+V)
-        });
     </script>
 </body>
 </html>
