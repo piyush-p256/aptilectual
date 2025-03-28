@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ company.name }} Problems - Aptilectual</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <style>
         :root {
             --bg-color: #f4f7f9;
@@ -187,7 +187,7 @@
         .company-details-container .logo-container img {
             max-width: 150px;
             max-height: 150px;
-            border-radius: 50%;
+            
         }
         .company-details-container .details {
             text-align: center;
@@ -323,7 +323,7 @@
     flex-shrink: 0;
     margin-right: 10px; /* Adjust the margin to move it closer */
 }
-    
+
         @media screen and (max-width: 768px) {
             .footer-content {
         flex-direction: column;
@@ -465,8 +465,6 @@
             }
         }
     </style>
-      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 </head>
 <body>
     <!-- Header -->
@@ -520,7 +518,7 @@
             <div class="details">
                 <h2>{{ company.name }}</h2>
                 <p><strong>Hired Last Year:</strong> {{ company.hired_last_year }}</p>
-                <p><strong>Description:</strong> {{ company.description }}</p>
+                <p><strong>Description:</strong> {{ company.description|safe }}</p>
                 <button class="btn btn-primary" onclick="showProblems()">Aptitude Questions</button>
             </div>
         </section>
@@ -531,13 +529,13 @@
                 <ul>
                     {% for problem in problems %}
                         <li>
-                            <p><strong>Question:</strong> {{ problem.question }}</p>
+                            <p><strong>Question:</strong> {{ problem.question|safe }}</p>
                             <p><strong>Options:</strong></p>
                             <ul>
-                                <li>A. {{ problem.option1 }}</li>
-                                <li>B. {{ problem.option2 }}</li>
-                                <li>C. {{ problem.option3 }}</li>
-                                <li>D. {{ problem.option4 }}</li>
+                                <li>A. {{ problem.option1|safe }}</li>
+                                <li>B. {{ problem.option2|safe }}</li>
+                                <li>C. {{ problem.option3|safe }}</li>
+                                <li>D. {{ problem.option4|safe }}</li>
                             </ul>
                             <button onclick="showAnswer(this)">Show Answer</button>
                             <p class="answer" style="display: none;">
@@ -567,7 +565,6 @@
             </div>
         </div>
     </footer>
-
 
     <script>
         document.getElementById("currentYear").textContent = new Date().getFullYear();
