@@ -138,3 +138,11 @@ class Test(models.Model):
 
     def __str__(self):
         return self.test_name
+    
+class CancelledTest(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    test_id = models.IntegerField()
+    cancelled_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - Test ID: {self.test_id}"

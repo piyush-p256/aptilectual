@@ -404,6 +404,58 @@
             margin-top: 2rem;
             color: var(--accent-color);
         }
+        main.blurred {
+    filter: blur(8px);
+    pointer-events: none; /* Prevent interaction with blurred elements */
+}
+
+body.blurred .fullscreen-button {
+    pointer-events: all; /* Allow interaction with the button */
+}
+
+.fullscreen-button {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--primary-color);
+    color: #ffffff;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    z-index: 1001; /* Ensure it stays on top */
+    font-size: 1.5rem;
+}
+
+
+        .fullscreen-button:hover {
+            background-color: #2980b9;
+        }
+        
+        .warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--accent-color);
+            color: #ffffff;
+            padding: 2rem;
+            border-radius: 5px;
+            z-index: 1002;
+            font-size: 1.5rem;
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
@@ -451,9 +503,9 @@
         </nav>
     </header>
 
-    <main>
+    <main id="content">
         <section class="form-container">
-            <h1>Test Problems (Test ID: {{ test.test_name }})</h1>
+            <h1>{{ test.test_name }}</h1>
             <div class="timer" id="timer">Time Left: </div>
             {% if message %}
                 <p>{{ message }}</p>
@@ -503,160 +555,293 @@
         </section>
     </main>
 
+    <button class="fullscreen-button" id="fullscreenButton">Enter Fullscreen</button>
+    <div class="warning" id="warning">You have switched tabs! Please focus on the test.</div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const forms = document.querySelectorAll('.problem-container form');
-
-            forms.forEach(form => {
-                form.addEventListener('submit', async (event) => {
-                    event.preventDefault(); // Prevent default form submission
-
-                    const formData = new FormData(form);
-                    const problemContainer = form.closest('.problem-container');
-                    const problemId = formData.get('problem_id');
-
-                    try {
-                        const response = await fetch(form.action, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                            },
-                        });
-
-                        const result = await response.json();
-
-if (result.status === 'success') {
-    // Hide the problem container
-    problemContainer.style.display = 'none';
-
-    // Check if all problems are solved
-    const remainingProblems = document.querySelectorAll('.problem-container:not([style*="display: none"])');
-    if (remainingProblems.length === 0) {
-        document.getElementById('timer').style.display = 'none'; // Hide the timer
-        const message = document.createElement('p');
-        message.classList.add('notification');
-        message.innerHTML = ' <a href="{% url "test_leaderboard" test_id=test_id %}" class="btn btn-primary">See Leaderboard</a>';
-        document.querySelector('.form-container').appendChild(message);
-    }
-} else if (result.status === 'error') {
-    alert(result.message);
-}
-} catch (error) {
-console.error('Submission failed:', error);
-}
-});
-});
-
-            const themeToggle = document.getElementById('themeToggle');
-            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-            const savedTheme = localStorage.getItem('theme');
-            const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
-            document.body.classList.add(initialTheme);
-            updateThemeIcon(initialTheme);
-
-            themeToggle.addEventListener('click', () => {
-                const isLightTheme = document.body.classList.contains('light-theme');
-                const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
-                document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
-                document.body.classList.add(newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateThemeIcon(newTheme);
-            });
-
-            prefersDarkScheme.addEventListener('change', (e) => {
-                if (!localStorage.getItem('theme')) {
-                    const newTheme = e.matches ? 'dark-theme' : 'light-theme';
-                    document.body.classList.remove('dark-theme', 'light-theme');
-                    document.body.classList.add(newTheme);
-                    updateThemeIcon(newTheme);
-                }
-            });
-
-            initializeNavigation();
-
-            const timerElement = document.getElementById('timer');
-
-// Get test start time and duration from Django template
-const testStartTime = new Date("{{ test.start_time|date:'Y-m-d H:i:s' }}"); // Convert Django DateTime to JS Date
-const testDuration = {{ test.duration_in_hours }} * 60 * 60 * 1000; // Convert hours to milliseconds
-const endTime = new Date(testStartTime.getTime() + testDuration); // Calculate end time
-
-const interval = setInterval(() => {
-    const now = new Date();
-    let timeLeft = Math.max(0, endTime - now); // Ensure timeLeft is not negative
-
-    if (timeLeft <= 0) {
-        clearInterval(interval);
-        timerElement.textContent = "Time's up!";
-        
-        // Hide problems
-        document.querySelectorAll('.problem-container').forEach(container => {
-            container.style.display = 'none';
-        });
-
-        // Prevent duplicate message
-        if (!document.querySelector('.notification')) {
-            const message = document.createElement('p');
-            message.classList.add('notification');
-            message.innerHTML = '<a href="{% url "test_leaderboard" test_id=test_id %}" class="btn btn-primary">See Leaderboard</a>';
-            document.querySelector('.form-container').appendChild(message);
-        }
+   document.addEventListener('DOMContentLoaded', () => {
+    // Prevent test attempt if already cancelled (via localStorage)
+    if (localStorage.getItem('cancelledTest_{{ test_id }}')) {
+        window.location.href = "{% url 'test_leaderboard' test_id=test_id %}";
         return;
     }
 
-    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+    const forms = document.querySelectorAll('.problem-container form');
+    const warning = document.getElementById('warning');
+    let warningCount = 0;
+    let violationTimer = null; // Timer for detecting sustained violation
 
-    timerElement.textContent = `Time Left: ${hours}h ${minutes}m ${seconds}s`;
-}, 1000);
-});
-        function updateThemeIcon(theme) {
-            const themeToggle = document.getElementById('themeToggle');
-            themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
+    const fullscreenButton = document.getElementById('fullscreenButton');
+    const content = document.getElementById('content');
+    let isFullscreen = false;
+
+    function toggleBlur(state) {
+        if (state) {
+            content.classList.add('blurred');
+        } else {
+            content.classList.remove('blurred');
         }
+    }
 
-        function initializeNavigation() {
-            const burger = document.querySelector('.burger');
-            const nav = document.querySelector('.nav-links');
-            const navLinks = document.querySelectorAll('.nav-links li');
-            const closeMenu = document.querySelector('.close-menu');
+    // Blur background on load
+    toggleBlur(true);
 
-            function toggleMenu() {
-                nav.classList.toggle('nav-active');
-                burger.classList.toggle('toggle');
+    fullscreenButton.addEventListener('click', () => {
+        if (!isFullscreen) {
+            if (document.fullscreenEnabled) {
+                document.documentElement.requestFullscreen();
             }
+            toggleBlur(false);
+            fullscreenButton.style.display = 'none';
+            isFullscreen = true;
+        }
+    });
 
-            // Close menu when clicking outside
-            document.addEventListener('click', (e) => {
-                if (nav.classList.contains('nav-active') &&
-                    !nav.contains(e.target) &&
-                    !burger.contains(e.target)) {
-                    toggleMenu();
-                }
-            });
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            toggleBlur(true);
+            fullscreenButton.style.display = 'block';
+            isFullscreen = false;
+        }
+    });
 
-            // Toggle menu on burger click
-            burger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleMenu();
-            });
+    forms.forEach(form => {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
 
-            // Close menu on X button click
-            if (closeMenu) {
-                closeMenu.addEventListener('click', toggleMenu);
-            }
+            const formData = new FormData(form);
+            const problemContainer = form.closest('.problem-container');
+            const problemId = formData.get('problem_id');
 
-            // Close menu when clicking a link
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    if (nav.classList.contains('nav-active')) {
-                        toggleMenu();
-                    }
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
                 });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Hide the problem container
+                    problemContainer.style.display = 'none';
+
+                    // Check if all problems are solved
+                    const remainingProblems = document.querySelectorAll('.problem-container:not([style*="display: none"])');
+                    if (remainingProblems.length === 0) {
+                        document.getElementById('timer').style.display = 'none'; // Hide the timer
+                        const message = document.createElement('p');
+                        message.classList.add('notification');
+                        message.innerHTML = ' <a href="{% url "test_leaderboard" test_id=test_id %}" class="btn btn-primary">See Leaderboard</a>';
+                        document.querySelector('.form-container').appendChild(message);
+                    }
+                } else if (result.status === 'error') {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('Submission failed:', error);
+            }
+        });
+    });
+
+    const themeToggle = document.getElementById('themeToggle');
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const savedTheme = localStorage.getItem('theme');
+    const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
+    document.body.classList.add(initialTheme);
+    updateThemeIcon(initialTheme);
+
+    themeToggle.addEventListener('click', () => {
+        const isLightTheme = document.body.classList.contains('light-theme');
+        const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
+        document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
+        document.body.classList.add(newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    });
+
+    prefersDarkScheme.addEventListener('change', (e) => {
+        if (!localStorage.getItem('theme')) {
+            const newTheme = e.matches ? 'dark-theme' : 'light-theme';
+            document.body.classList.remove('dark-theme', 'light-theme');
+            document.body.classList.add(newTheme);
+            updateThemeIcon(newTheme);
+        }
+    });
+
+    initializeNavigation();
+
+    const timerElement = document.getElementById('timer');
+
+    // Get test start time and duration from Django template
+    const testStartTime = new Date("{{ test.start_time|date:'Y-m-d H:i:s' }}"); // Convert Django DateTime to JS Date
+    const testDuration = {{ test.duration_in_hours }} * 60 * 60 * 1000; // Convert hours to milliseconds
+    const endTime = new Date(testStartTime.getTime() + testDuration); // Calculate end time
+
+    const interval = setInterval(() => {
+        const now = new Date();
+        let timeLeft = Math.max(0, endTime - now); // Ensure timeLeft is not negative
+
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            timerElement.textContent = "Time's up!";
+
+            // Hide problems
+            document.querySelectorAll('.problem-container').forEach(container => {
+                container.style.display = 'none';
+            });
+
+            // Prevent duplicate message
+            if (!document.querySelector('.notification')) {
+                const message = document.createElement('p');
+                message.classList.add('notification');
+                message.innerHTML = '<a href="{% url "test_leaderboard" test_id=test_id %}" class="btn btn-primary">See Leaderboard</a>';
+                document.querySelector('.form-container').appendChild(message);
+            }
+            return;
+        }
+
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        timerElement.textContent = `Time Left: ${hours}h ${minutes}m ${seconds}s`;
+    }, 1000);
+
+    // =============================
+    // Tab/App Switching Detection
+    // =============================
+
+    // Function to trigger warning and eventually cancel the test
+    function triggerViolationWarning() {
+        warningCount++;
+        warning.style.display = 'block';
+        // If three violations have occurred, cancel the test
+        if (warningCount >= 3) {
+            // End test: clear intervals and hide problems
+            clearInterval(interval);
+            const hiddenElements = document.querySelectorAll('.problem-container');
+            hiddenElements.forEach(container => {
+                container.style.display = 'none';
+            });
+            timerElement.textContent = "Test Cancelled due to violations.";
+
+            // Mark test as cancelled via AJAX call (ensure your cancel_test view accepts POST)
+            fetch("{% url 'cancel_test' test_id=test_id %}", {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            }).then(response => {
+                // Optionally process the response
+                localStorage.setItem('cancelledTest_{{ test_id }}', 'true');
+                // Optionally redirect:
+                // window.location.href = "{% url 'test_leaderboard' test_id=test_id %}";
+            }).catch(error => {
+                console.error("Error cancelling test:", error);
             });
         }
+    }
+
+    // Clear any pending violation timer
+    function clearViolationTimer() {
+        if (violationTimer) {
+            clearTimeout(violationTimer);
+            violationTimer = null;
+        }
+        warning.style.display = 'none';
+    }
+
+    // Monitor visibility change (tab switching)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            // If tab is hidden, start a 2-second timer to trigger a violation
+            violationTimer = setTimeout(triggerViolationWarning, 2000);
+        } else {
+            clearViolationTimer();
+        }
+    });
+
+    // Monitor window resize to detect if user is not in full-screen mode (i.e. side-by-side apps)
+    window.addEventListener('resize', () => {
+        if (!document.fullscreenElement) {
+            // Check if the window occupies less than 90% of the available screen dimensions
+            let widthRatio = window.innerWidth / window.screen.availWidth;
+            let heightRatio = window.innerHeight / window.screen.availHeight;
+            if (widthRatio < 0.9 || heightRatio < 0.9) {
+                violationTimer = setTimeout(triggerViolationWarning, 2000);
+            } else {
+                clearViolationTimer();
+            }
+        }
+    });
+
+    // Monitor window blur/focus to detect when another app or browser window is opened on top
+    window.addEventListener('blur', () => {
+        violationTimer = setTimeout(triggerViolationWarning, 2000);
+    });
+
+    window.addEventListener('focus', () => {
+        clearViolationTimer();
+    });
+
+    // Hide warning after its animation ends (if using CSS animation)
+    warning.addEventListener('animationend', () => {
+        setTimeout(() => {
+            warning.style.display = 'none';
+        }, 5000);
+    });
+});
+
+function updateThemeIcon(theme) {
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
+}
+
+function initializeNavigation() {
+    const burger = document.querySelector('.burger');
+    const nav = document.querySelector('.nav-links');
+    const navLinks = document.querySelectorAll('.nav-links li');
+    const closeMenu = document.querySelector('.close-menu');
+
+    function toggleMenu() {
+        nav.classList.toggle('nav-active');
+        burger.classList.toggle('toggle');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (nav.classList.contains('nav-active') &&
+            !nav.contains(e.target) &&
+            !burger.contains(e.target)) {
+            toggleMenu();
+        }
+    });
+
+    // Toggle menu on burger click
+    burger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+    });
+
+    // Close menu on X button click
+    if (closeMenu) {
+        closeMenu.addEventListener('click', toggleMenu);
+    }
+
+    // Close menu when clicking a link
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (nav.classList.contains('nav-active')) {
+                toggleMenu();
+            }
+        });
+    });
+}
+
     </script>
     <script>
         document.addEventListener("contextmenu", function (event) {

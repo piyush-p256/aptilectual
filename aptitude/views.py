@@ -8,7 +8,7 @@ from django.db.models import F
 from django.http import JsonResponse
 from django.db.utils import IntegrityError
 from datetime import timedelta
-from .models import Problem, Test, UserAnswer, CustomUser, LeaderDaily, Company
+from .models import CancelledTest, Problem, Test, UserAnswer, CustomUser, LeaderDaily, Company
 from .forms import SignUpForm, LoginForm, SubmissionForm
 from .models import Problem, TestAnswer
 
@@ -209,58 +209,7 @@ def company_problems(request, company_name):
     })
 
 
-@login_required
-def test_view(request, test_id):
-    now = timezone.now()
-    problems = Problem.objects.filter(test_id=test_id, is_active=True, done=False)
-    attempted_problems = set(TestAnswer.objects.filter(user=request.user, test_id=test_id).values_list('problem', flat=True))
 
-    if problems.exists():
-        if request.method == 'POST':
-            problem_id = request.POST.get('problem_id')
-            problem = get_object_or_404(Problem, id=problem_id, test_id=test_id, is_active=True, done=False)
-            selected_option = request.POST.get('selected_option')
-            solution_image_url = request.POST.get('solution_image_url', '')
-
-            # Avoid duplicate submissions
-            if problem.id in attempted_problems:
-                return JsonResponse({'status': 'error', 'message': 'You have already attempted this question.'})
-
-            # Save or detect duplicate submission
-            try:
-                submission, created = TestAnswer.objects.get_or_create(
-                    user=request.user,
-                    problem=problem,
-                    test_id=test_id,
-                    defaults={
-                        'selected_option': selected_option,
-                        'solution_image_url': solution_image_url,
-                        'is_correct': (selected_option == str(problem.correct_option)),
-                    }
-                )
-                if not created:
-                    return JsonResponse({'status': 'error', 'message': 'Duplicate submission detected.'})
-
-                # Update total attempted and correct
-                user = request.user
-                user.total_attempted = F('total_attempted') + 1
-                if submission.is_correct:
-                    user.total_correct = F('total_correct') + 1
-
-                # Save user stats
-                user.save()
-                return JsonResponse({'status': 'success', 'message': 'Submission successful.'})
-            except IntegrityError:
-                return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'})
-        else:
-            return render(request, 'test.html', {
-                'problems': problems,
-                'attempted_problems': attempted_problems,
-                'test_id': test_id
-            })
-    else:
-        return render(request, 'test.html', {'message': 'No problems available for this test.'})
-    
 @login_required
 def test_leaderboard(request, test_id):
     now = timezone.now()
@@ -329,6 +278,13 @@ def test_view(request, test_id):
     problems = Problem.objects.filter(test_id=test_id, is_active=True, done=False)
     attempted_problems = set(TestAnswer.objects.filter(user=request.user, test_id=test_id).values_list('problem', flat=True))
 
+    # Check if the test is cancelled for the user
+    if CancelledTest.objects.filter(user=request.user, test_id=test_id).exists():
+        return render(request, 'test.html', {
+            'message': 'Your test has been canceled due to suspected cheating. If you believe this was a mistake, please contact the administrator.',
+            'test_id': test_id  # Pass test_id in the context
+        })
+
     if problems.exists():
         if request.method == 'POST':
             problem_id = request.POST.get('problem_id')
@@ -374,4 +330,13 @@ def test_view(request, test_id):
                 'test': test
             })
     else:
-        return render(request, 'test.html', {'message': 'No problems available for this test.'})
+        return render(request, 'test.html', {
+            'message': 'No problems available for this test.',
+            'test_id': test_id  # Also pass test_id here if needed
+        })
+
+@login_required
+def cancel_test(request, test_id):
+    test = get_object_or_404(Test, test_id=test_id)
+    CancelledTest.objects.create(user=request.user, test_id=test_id)
+    return redirect('test_leaderboard', test_id=test_id)
