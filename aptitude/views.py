@@ -44,7 +44,7 @@ from django.utils.timezone import localtime, timedelta
 def dailyprobblems(request):
     now = timezone.localtime()
     start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    end_time = now.replace(hour=22, minute=0, second=0, microsecond=0)
+    end_time = now.replace(hour=23, minute=59, second=0, microsecond=0)
 
     if start_time <= now <= end_time:
         problems = Problem.objects.filter(is_active=True, done=False)
