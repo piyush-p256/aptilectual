@@ -413,7 +413,7 @@
                     <li><a href="{% url 'dailyprobblems' %}">Daily Problems</a></li>
                     <li><a href="{% url 'past_problems' %}">Past Problems</a></li>
                     <li><a href="{% url 'daily_leaderboard' %}">Leaderboard</a></li>
-                    <li><a href="{% url 'companywise' %}">Comapanies</a></li>
+                    <li><a href="{% url 'companywise' %}">Companies</a></li>
                     <li><a href="{% url 'profile' %}">Profile</a></li>
                     <li class="mobile-auth">
                         {% if user.is_authenticated %}
@@ -450,54 +450,54 @@
     <main>
         <section class="form-container">
             <h1>Daily Problems</h1>
-
+    
             {% if message %}
                 <p>{{ message }}</p>
             {% elif problems %}
-            {% for problem in problems %}
-            <div class="problem-container {% if problem.id in attempted_problems %}hidden{% endif %}" id="problem-{{ problem.id }}">
-                <h2>{{ problem.question|safe }}</h2>
-                {% if problem.questionimage %}
-                    <div class="question-image">
-                        <img src="{{ problem.questionimage }}" alt="Question Image">
+                {% for problem in problems %}
+                    <div class="problem-container {% if problem.id in attempted_problems %}hidden{% endif %}" id="problem-{{ problem.id }}">
+                        <h2>Q{{ forloop.counter }}: {{ problem.question|safe }}</h2>
+                        {% if problem.questionimage %}
+                            <div class="question-image">
+                                <img src="{{ problem.questionimage }}" alt="Question Image">
+                            </div>
+                        {% endif %}
+                        {% if problem.id in attempted_problems %}
+                            <p>You have already attempted this question.</p>
+                        {% else %}
+                            <form id="problem-form-{{ problem.id }}" action="{% url 'dailyprobblems' %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="problem_id" value="{{ problem.id }}">
+                                <div class="form-group">
+                                    <label>
+                                        <input type="radio" name="selected_option" value="1" required>
+                                        {{ problem.option1 }}
+                                    </label><br>
+                                    <label>
+                                        <input type="radio" name="selected_option" value="2" required>
+                                        {{ problem.option2 }}
+                                    </label><br>
+                                    <label>
+                                        <input type="radio" name="selected_option" value="3" required>
+                                        {{ problem.option3 }}
+                                    </label><br>
+                                    <label>
+                                        <input type="radio" name="selected_option" value="4" required>
+                                        {{ problem.option4 }}
+                                    </label><br>
+                                </div>
+                                <div class="form-group">
+                                    <label for="solution_image_url_{{ problem.id }}">Solution Image URL (optional):</label>
+                                    <input type="url" id="solution_image_url_{{ problem.id }}" name="solution_image_url">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="upload-btn" onclick="openUploadWidget({{ problem.id }})">Upload Solution Image</button>
+                                    <button type="submit" class="submit-btn">Submit</button>
+                                </div>
+                            </form>
+                        {% endif %}
                     </div>
-                {% endif %}
-                {% if problem.id in attempted_problems %}
-                    <p>You have already attempted this question.</p>
-                {% else %}
-                    <form id="problem-form-{{ problem.id }}" action="{% url 'dailyprobblems' %}" method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="problem_id" value="{{ problem.id }}">
-                        <div class="form-group">
-                            <label>
-                                <input type="radio" name="selected_option" value="1" required>
-                                {{ problem.option1 }}
-                            </label><br>
-                            <label>
-                                <input type="radio" name="selected_option" value="2" required>
-                                {{ problem.option2 }}
-                            </label><br>
-                            <label>
-                                <input type="radio" name="selected_option" value="3" required>
-                                {{ problem.option3 }}
-                            </label><br>
-                            <label>
-                                <input type="radio" name="selected_option" value="4" required>
-                                {{ problem.option4 }}
-                            </label><br>
-                        </div>
-                        <div class="form-group">
-                            <label for="solution_image_url_{{ problem.id }}">Solution Image URL (optional):</label>
-                            <input type="url" id="solution_image_url_{{ problem.id }}" name="solution_image_url">
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="upload-btn" onclick="openUploadWidget({{ problem.id }})">Upload Solution Image</button>
-                            <button type="submit" class="submit-btn">Submit</button>
-                        </div>
-                    </form>
-                {% endif %}
-            </div>
-        {% endfor %}
+                {% endfor %}
                 {% if not problems %}
                     <p>Answers will be revealed in the WhatsApp group.</p>
                 {% endif %}
@@ -506,6 +506,7 @@
             {% endif %}
         </section>
     </main>
+    
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

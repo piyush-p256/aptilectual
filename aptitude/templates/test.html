@@ -510,45 +510,46 @@ body.blurred .fullscreen-button {
             {% if message %}
                 <p>{{ message }}</p>
             {% elif problems %}
-                {% for problem in problems %}
-                    <div class="problem-container {% if problem.id in attempted_problems %}hidden{% endif %}" id="problem-{{ problem.id }}">
-                        <h2>{{ problem.question|safe }}</h2>
-                        {% if problem.questionimage %}
-                            <div class="question-image">
-                                <img src="{{ problem.questionimage }}" alt="Question Image">
-                            </div>
-                        {% endif %}
-                        {% if problem.id in attempted_problems %}
-                            <p>You have already attempted this question.</p>
-                        {% else %}
-                            <form id="problem-form-{{ problem.id }}" action="{% url 'test_view' test_id=test_id %}" method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="problem_id" value="{{ problem.id }}">
-                                <div class="form-group">
-                                    <label>
-                                        <input type="radio" name="selected_option" value="1" required>
-                                        {{ problem.option1 }}
-                                    </label><br>
-                                    <label>
-                                        <input type="radio" name="selected_option" value="2" required>
-                                        {{ problem.option2 }}
-                                    </label><br>
-                                    <label>
-                                        <input type="radio" name="selected_option" value="3" required>
-                                        {{ problem.option3 }}
-                                    </label><br>
-                                    <label>
-                                        <input type="radio" name="selected_option" value="4" required>
-                                        {{ problem.option4 }}
-                                    </label><br>
-                                </div>
-                                <div class="form-actions">
-                                    <button type="submit" class="submit-btn">Submit</button>
-                                </div>
-                            </form>
-                        {% endif %}
+            {% for problem in problems %}
+            <div class="problem-container {% if problem.id in attempted_problems %}hidden{% endif %}" id="problem-{{ problem.id }}">
+                <h2>Q{{ forloop.counter }}: {{ problem.question|safe }}</h2>
+                {% if problem.questionimage %}
+                    <div class="question-image">
+                        <img src="{{ problem.questionimage }}" alt="Question Image">
                     </div>
-                {% endfor %}
+                {% endif %}
+                {% if problem.id in attempted_problems %}
+                    <p>You have already attempted this question.</p>
+                {% else %}
+                    <form id="problem-form-{{ problem.id }}" action="{% url 'test_view' test_id=test_id %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="problem_id" value="{{ problem.id }}">
+                        <div class="form-group">
+                            <label>
+                                <input type="radio" name="selected_option" value="1" required>
+                                {{ problem.option1 }}
+                            </label><br>
+                            <label>
+                                <input type="radio" name="selected_option" value="2" required>
+                                {{ problem.option2 }}
+                            </label><br>
+                            <label>
+                                <input type="radio" name="selected_option" value="3" required>
+                                {{ problem.option3 }}
+                            </label><br>
+                            <label>
+                                <input type="radio" name="selected_option" value="4" required>
+                                {{ problem.option4 }}
+                            </label><br>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="submit-btn">Submit</button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
             {% else %}
                 <p>No problems available for this test.</p>
             {% endif %}
@@ -559,9 +560,12 @@ body.blurred .fullscreen-button {
     <div class="warning" id="warning">You have switched tabs! Please focus on the test.</div>
 
     <script>
-   document.addEventListener('DOMContentLoaded', () => {
-    // Prevent test attempt if already cancelled (via localStorage)
-    if (localStorage.getItem('cancelledTest_{{ test_id }}')) {
+ document.addEventListener('DOMContentLoaded', () => {
+    // Get the test id from the Django template context
+    const testId = "{{ test_id }}";
+
+    // Prevent test attempt if already cancelled for this test (via localStorage)
+    if (localStorage.getItem(`cancelledTest_${testId}`)) {
         window.location.href = "{% url 'test_leaderboard' test_id=test_id %}";
         return;
     }
@@ -737,7 +741,7 @@ body.blurred .fullscreen-button {
                 }
             }).then(response => {
                 // Optionally process the response
-                localStorage.setItem('cancelledTest_{{ test_id }}', 'true');
+                localStorage.setItem(`cancelledTest_${testId}`, 'true');
                 // Optionally redirect:
                 // window.location.href = "{% url 'test_leaderboard' test_id=test_id %}";
             }).catch(error => {
@@ -841,6 +845,7 @@ function initializeNavigation() {
         });
     });
 }
+
 
     </script>
     <script>

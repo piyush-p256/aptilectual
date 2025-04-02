@@ -478,6 +478,49 @@
         text-align: center;
     }
 }
+
+/* Logo styles - ADDED FOR LOGOS */
+.left-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.right-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.college-logo {
+    height: 40px;
+    width: auto;
+}
+
+.bvpinc-logo {
+    height: 40px;
+    width: auto;
+}
+
+@media screen and (max-width: 768px) {
+    .college-logo {
+        height: 30px;
+    }
+    
+    .bvpinc-logo {
+        display: none; /* Hide on mobile to save space */
+    }
+    
+    .left-section {
+        gap: 0.5rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .college-logo {
+        height: 25px;
+    }
+}
         
 </style>
  
@@ -487,14 +530,17 @@
 <body>
     <header>
         <nav>
-            <div class="logo">Aptilectual</div>
+            <div class="left-section">
+                <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/college%20logo.jpg-wmpXrSm3q3z8gM1Hv4ITrm4KwGO9eR.jpeg" alt="Bharati Vidyapeeth Logo" class="college-logo">
+                <div class="logo">Aptilectual</div>
+            </div>
             <div class="nav-container">
                 <ul class="nav-links">
                     <li><a href="{% url 'home' %}">Home</a></li>
                     <li><a href="{% url 'dailyprobblems' %}">Daily Problems</a></li>
                     <li><a href="{% url 'past_problems' %}">Past Problems</a></li>
                     <li><a href="{% url 'daily_leaderboard' %}">Leaderboard</a></li>
-                    <li><a href="{% url 'companywise' %}">Comapanies</a></li>
+                    <li><a href="{% url 'companywise' %}">Companies</a></li>
                     <li><a href="{% url 'profile' %}">Profile</a></li>
                     <li class="mobile-auth">
                         {% if user.is_authenticated %}
@@ -506,22 +552,25 @@
                     </li>
                 </ul>
             </div>
-            <div class="desktop-controls">
-                <div class="auth-buttons">
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'logout' %}" id="logoutBtn" class="btn btn-secondary">Logout</a>
-                    {% else %}
-                        <a href="{% url 'login' %}" id="loginBtn" class="btn btn-primary">Login</a>
-                        <a href="{% url 'signup' %}" id="registerBtn" class="btn btn-secondary">Register</a>
-                    {% endif %}
+            <div class="right-section">
+                <div class="desktop-controls">
+                    <div class="auth-buttons">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'logout' %}" id="logoutBtn" class="btn btn-secondary">Logout</a>
+                        {% else %}
+                            <a href="{% url 'login' %}" id="loginBtn" class="btn btn-primary">Login</a>
+                            <a href="{% url 'signup' %}" id="registerBtn" class="btn btn-secondary">Register</a>
+                        {% endif %}
+                    </div>
+                    
+                    <button id="themeToggle" class="theme-toggle">🌙</button>
                 </div>
-                
-                <button id="themeToggle" class="theme-toggle">🌙</button>
-            </div>
-            <div class="burger">
-                <div class="line1"></div>
-                <div class="line2"></div>
-                <div class="line3"></div>
+                <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/bvpinc%20logo-8fM1k65el0LsAtGdXvhlyleROIyHdl.jpeg" alt="BVPINC Logo" class="bvpinc-logo">
+                <div class="burger">
+                    <div class="line1"></div>
+                    <div class="line2"></div>
+                    <div class="line3"></div>
+                </div>
             </div>
         </nav>
     </header>
