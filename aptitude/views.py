@@ -1,3 +1,4 @@
+import traceback
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
@@ -43,82 +44,101 @@ def home(request):
 
 @login_required
 def dailyprobblems(request):
-    now = timezone.localtime()
-    today = now.date()
-    start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    end_time = now.replace(hour=23, minute=59, second=0, microsecond=0)
+    try:
+        now = timezone.localtime()
+        today = now.date()
+        start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_time = now.replace(hour=23, minute=59, second=0, microsecond=0)
 
-    if start_time <= now <= end_time:
-        problems = Problem.objects.filter(is_active=True, done=False)
-        attempted_problems = set(UserAnswer.objects.filter(user=request.user).values_list('problem', flat=True))
+        if start_time <= now <= end_time:
+            problems = Problem.objects.filter(is_active=True, done=False)
+            attempted_problems = set(UserAnswer.objects.filter(user=request.user).values_list('problem', flat=True))
 
-        if problems.exists():
-            if request.method == 'POST':
-                problem_id = request.POST.get('problem_id')
-                problem = get_object_or_404(Problem, id=problem_id, is_active=True, done=False)
-                selected_option = request.POST.get('selected_option')
-                solution_image_url = request.POST.get('solution_image_url', '')
+            if problems.exists():
+                if request.method == 'POST':
+                    problem_id = request.POST.get('problem_id')
+                    problem = get_object_or_404(Problem, id=problem_id, is_active=True, done=False)
+                    selected_option = request.POST.get('selected_option')
+                    solution_image_url = request.POST.get('solution_image_url', '')
 
-                if problem.id in attempted_problems:
-                    return JsonResponse({'status': 'error', 'message': 'You have already attempted this question.'})
+                    if problem.id in attempted_problems:
+                        print(f"Problem {problem_id} already attempted by user {request.user.id}")
+                        return JsonResponse({'status': 'error', 'message': 'You have already attempted this question.'})
 
-                try:
-                    submission, created = UserAnswer.objects.get_or_create(
-                        user=request.user,
-                        problem=problem,
-                        defaults={
-                            'selected_option': selected_option,
-                            'solution_image_url': solution_image_url,
-                            'is_correct': (selected_option == str(problem.correct_option)),
-                        }
-                    )
-                    if not created:
-                        return JsonResponse({'status': 'error', 'message': 'Duplicate submission detected.'})
-
-                    user = request.user
-                    user.total_attempted = F('total_attempted') + 1
-                    if submission.is_correct:
-                        user.total_correct = F('total_correct') + 1
-
-                    # Update streak logic based on any attempt (correct or not)
-                    yesterday = today - timedelta(days=1)
-                    if user.last_active_date == yesterday:
-                        user.current_streak = F('current_streak') + 1
-                    else:
-                        user.current_streak = 1
-
-                    if user.current_streak > user.highest_streak:
-                        user.highest_streak = F('current_streak')
-
-                    user.last_active_date = today
-
-                    # Update user rating based on the daily problem attempt
-                    user.rating = update_rating(user, is_correct=submission.is_correct, context='daily')
-
-                    user.save()
-
-                    # Example: Award achievement for a 10-day streak
-                    if user.current_streak == 10:
-                        achievement, created = Achievement.objects.get_or_create(
-                            name='10 Day Streak',
-                            defaults={'description': 'Solved problems for 10 consecutive days.'}
+                    try:
+                        submission, created = UserAnswer.objects.get_or_create(
+                            user=request.user,
+                            problem=problem,
+                            defaults={
+                                'selected_option': selected_option,
+                                'solution_image_url': solution_image_url,
+                                'is_correct': (selected_option == str(problem.correct_option)),
+                            }
                         )
-                        user.achievements.add(achievement)
+                        if not created:
+                            print(f"Duplicate submission detected for problem {problem_id} by user {request.user.id}")
+                            return JsonResponse({'status': 'error', 'message': 'Duplicate submission detected.'})
+
+                        user = request.user
+                        user.total_attempted = F('total_attempted') + 1
+                        if submission.is_correct:
+                            user.total_correct = F('total_correct') + 1
+
+                        # Update streak logic based on any attempt (correct or not)
+                        yesterday = today - timedelta(days=1)
+                        if user.last_active_date == yesterday:
+                            user.current_streak = F('current_streak') + 1
+                        else:
+                            user.current_streak = 1
+
+                        # Save the user object to apply the F() expressions
                         user.save()
 
-                    return JsonResponse({'status': 'success', 'message': 'Submission successful.'})
-                except IntegrityError:
-                    return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'})
-            else:
-                return render(request, 'dailyprobblems.html', {
-                    'problems': problems,
-                    'attempted_problems': attempted_problems
-                })
-        else:
-            return render(request, 'dailyprobblems.html', {'message': 'No problems available today.'})
-    else:
-        return render(request, 'dailyprobblems.html', {'message': 'Problems will be available from 1:00 to 6:00.'})
+                        # Refresh the user object to get the updated values
+                        user.refresh_from_db()
 
+                        # Perform the comparison after refreshing the user object
+                        if user.current_streak > user.highest_streak:
+                            user.highest_streak = user.current_streak
+                            user.save()
+
+                        user.last_active_date = today
+
+                        # Update user rating based on the daily problem attempt
+                        user.rating = update_rating(user, is_correct=submission.is_correct, context='daily')
+
+                        user.save()
+
+                        # Example: Award achievement for a 10-day streak
+                        if user.current_streak == 10:
+                            achievement, created = Achievement.objects.get_or_create(
+                                name='10 Day Streak',
+                                defaults={'description': 'Solved problems for 10 consecutive days.'}
+                            )
+                            user.achievements.add(achievement)
+                            user.save()
+
+                        print(f"Submission successful for problem {problem_id} by user {request.user.id}")
+                        return JsonResponse({'status': 'success', 'message': 'Submission successful.'})
+                    except IntegrityError:
+                        print(f"IntegrityError occurred for problem {problem_id} by user {request.user.id}")
+                        return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'})
+                else:
+                    print(f"Rendering daily problems for user {request.user.id}")
+                    return render(request, 'dailyprobblems.html', {
+                        'problems': problems,
+                        'attempted_problems': attempted_problems
+                    })
+            else:
+                print("No problems available today.")
+                return render(request, 'dailyprobblems.html', {'message': 'No problems available today.'})
+        else:
+            print("Problems will be available from 1:00 to 6:00.")
+            return render(request, 'dailyprobblems.html', {'message': 'Problems will be available from 1:00 to 6:00.'})
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        traceback.print_exc()
+        return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'}, status=500)
 
 @login_required
 def profile(request):
