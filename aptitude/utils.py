@@ -7,7 +7,7 @@ def update_rating(user, is_correct, context='daily'):
     base_rating = user.rating
     bonus = 0
     if context == 'daily':
-        bonus += 10 if is_correct else 0
+        bonus += 2 if is_correct else 0
         bonus += 5 * user.current_streak  # Streak bonus
     elif context == 'test':
         bonus += 20  # Example bonus for tests

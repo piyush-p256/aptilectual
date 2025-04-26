@@ -49,7 +49,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     highest_streak = models.IntegerField(default=0)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    rating = models.FloatField(default=1500)  # New rating field
+    rating = models.FloatField(default=0)  # New rating field
     last_active_date = models.DateField(null=True, blank=True)  # For streak calculation
     profile_picture = models.URLField(null=True, blank=True)  # Public profile picture URL
     bio = models.TextField(null=True, blank=True)  # User bio
@@ -103,6 +103,7 @@ class Problem(models.Model):
     done = models.BooleanField(default=False, null=True, blank=True)
     answerurl = models.URLField(null=True, blank=True)
     companyname = models.CharField(max_length=255, null=True, blank=True)
+    type = models.CharField(max_length=255, null=True, blank=True)
     test_id = models.IntegerField(null=True, blank=True)
     questionimage = models.URLField(null=True, blank=True)
 

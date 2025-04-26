@@ -365,6 +365,8 @@
             <h2>Instructions for {{ test.test_name }}</h2>
             <p>This test will be of {{ test.duration_in_hours }} hours.</p>
             <p>Only submit an answer when you are sure as it cannot be reversed.</p>
+            <p>All the problems are compulsory to attempt, there is no negative marking.</p>
+            <p>If you switch tabs more than 3 times it the test will be cancelled, if opend any other app then also test cancelled.</p>
             <p>The test will start in: <span class="countdown" id="countdown"></span></p>
             <a href="{% url 'start_test' test.test_id %}" class="start-btn" id="startTestBtn" style="pointer-events: none; opacity: 0.5;">
                 Start Test

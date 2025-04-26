@@ -135,6 +135,9 @@ def profile(request):
     return render(request, 'profile.html', {
         'email': user.email,
         'username': user.username,
+        'enrollment_number' : user.enrollment_number,
+        'end_year' : user.end_year,
+        'start_year' : user.start_year,
         'total_attempted': user.total_attempted,
         'total_correct': user.total_correct,
         'current_streak': user.current_streak,
@@ -155,7 +158,10 @@ def public_profile(request, username):
     """
     user = get_object_or_404(CustomUser, username=username)
     return render(request, 'public_profile.html', {
-         'email': user.email,
+        'email': user.email,
+        'enrollment_number' : user.enrollment_number,
+        'end_year' : user.end_year,
+        'start_year' : user.start_year,
         'username': user.username,
         'total_attempted': user.total_attempted,
         'total_correct': user.total_correct,
@@ -326,7 +332,6 @@ def start_test(request, test_id):
         return redirect('instructions', test_id=test_id)
     return redirect('test_view', test_id=test_id)
 
-
 @login_required
 def test_view(request, test_id):
     test = get_object_or_404(Test, test_id=test_id)
@@ -342,40 +347,43 @@ def test_view(request, test_id):
 
     if problems.exists():
         if request.method == 'POST':
-            problem_id = request.POST.get('problem_id')
-            problem = get_object_or_404(Problem, id=problem_id, test_id=test_id, is_active=True, done=False)
-            selected_option = request.POST.get('selected_option')
-            solution_image_url = request.POST.get('solution_image_url', '')
+            submissions = []
+            for problem in problems:
+                problem_id = request.POST.get(f'problem_id_{problem.id}')
+                selected_option = request.POST.get(f'selected_option_{problem.id}')
+                solution_image_url = request.POST.get('solution_image_url', '')
 
-            if problem.id in attempted_problems:
-                return JsonResponse({'status': 'error', 'message': 'You have already attempted this question.'})
+                if problem.id in attempted_problems:
+                    return JsonResponse({'status': 'error', 'message': 'You have already attempted this question.'})
 
-            try:
-                submission, created = TestAnswer.objects.get_or_create(
-                    user=request.user,
-                    problem=problem,
-                    test_id=test_id,
-                    defaults={
-                        'selected_option': selected_option,
-                        'solution_image_url': solution_image_url,
-                        'is_correct': (selected_option == str(problem.correct_option)),
-                    }
-                )
-                if not created:
-                    return JsonResponse({'status': 'error', 'message': 'Duplicate submission detected.'})
+                try:
+                    submission, created = TestAnswer.objects.get_or_create(
+                        user=request.user,
+                        problem=problem,
+                        test_id=test_id,
+                        defaults={
+                            'selected_option': selected_option,
+                            'solution_image_url': solution_image_url,
+                            'is_correct': (selected_option == str(problem.correct_option)),
+                        }
+                    )
+                    if not created:
+                        return JsonResponse({'status': 'error', 'message': 'Duplicate submission detected.'})
 
-                user = request.user
-                user.total_attempted = F('total_attempted') + 1
-                if submission.is_correct:
-                    user.total_correct = F('total_correct') + 1
+                    submissions.append(submission)
+                except IntegrityError:
+                    return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'})
 
-                user.save()
-                return JsonResponse({'status': 'success', 'message': 'Submission successful.'})
-            except IntegrityError:
-                return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'})
+            user = request.user
+            user.total_attempted = F('total_attempted') + len(submissions)
+            user.total_correct = F('total_correct') + sum(1 for s in submissions if s.is_correct)
+            user.save()
+
+            return JsonResponse({'status': 'success', 'message': 'Submission successful.'})
         else:
             return render(request, 'test.html', {
                 'problems': problems,
+                'type' : Problem.type,
                 'attempted_problems': attempted_problems,
                 'test_id': test_id,
                 'test': test
