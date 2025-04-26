@@ -1,5 +1,3 @@
-# aptitude/models.py
-
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
 from django.utils import timezone
@@ -27,20 +25,38 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(email, username, password, **extra_fields)
 
+
+class Achievement(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    icon_url = models.URLField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=150, unique=True)
+    start_year = models.IntegerField(null=True, blank=True)
+    end_year = models.IntegerField(null=True, blank=True)
+    branch = models.CharField(max_length=100, null=True, blank=True)
+    enrollment_number = models.CharField(max_length=100, null=True, blank=True)
+    contact_number = models.CharField(max_length=15, null=True, blank=True)
     total_attempted = models.IntegerField(default=0)
     total_correct = models.IntegerField(default=0)
     current_streak = models.IntegerField(default=0)
     highest_streak = models.IntegerField(default=0)
-    is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
+    rating = models.FloatField(default=1500)  # New rating field
+    last_active_date = models.DateField(null=True, blank=True)  # For streak calculation
+    profile_picture = models.URLField(null=True, blank=True)  # Public profile picture URL
+    bio = models.TextField(null=True, blank=True)  # User bio
     first_position_count = models.IntegerField(default=0)
     second_position_count = models.IntegerField(default=0)
     third_position_count = models.IntegerField(default=0)
-
+    
     groups = models.ManyToManyField(
         Group,
         related_name='customuser_set',
@@ -57,6 +73,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name='user permissions',
         help_text='Specific permissions for this user.'
     )
+    # New Many-to-Many field for Achievements/Badges
+    achievements = models.ManyToManyField(Achievement, blank=True)
+    
+    date_joined = models.DateTimeField(default=timezone.now)
 
     objects = CustomUserManager()
 
@@ -65,6 +85,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
 
 class Problem(models.Model):
     id = models.AutoField(primary_key=True)  # Explicitly define the id field
@@ -83,9 +104,11 @@ class Problem(models.Model):
     answerurl = models.URLField(null=True, blank=True)
     companyname = models.CharField(max_length=255, null=True, blank=True)
     test_id = models.IntegerField(null=True, blank=True)
-    questionimage = models.URLField(null=True, blank=True) 
+    questionimage = models.URLField(null=True, blank=True)
+
     def __str__(self):
         return self.question or "No question"
+
 
 class UserAnswer(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -98,12 +121,12 @@ class UserAnswer(models.Model):
     class Meta:
         unique_together = ('user', 'problem')  # Ensure a user can only solve a problem once
 
+
 class LeaderDaily(models.Model):
     show_leaderboard = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Show Leaderboard: {self.show_leaderboard}"
-    
 
 
 class Company(models.Model):
@@ -114,7 +137,8 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+
 class TestAnswer(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     problem = models.ForeignKey('Problem', on_delete=models.CASCADE)
@@ -126,7 +150,8 @@ class TestAnswer(models.Model):
 
     def __str__(self):
         return f"TestAnswer by {self.user.username} for Problem {self.problem.id} (Test ID: {self.test_id})"
-    
+
+
 class Test(models.Model):
     test_id = models.IntegerField(primary_key=True)
     test_name = models.CharField(max_length=255)
@@ -138,7 +163,8 @@ class Test(models.Model):
 
     def __str__(self):
         return self.test_name
-    
+
+
 class CancelledTest(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     test_id = models.IntegerField()

@@ -4,12 +4,22 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import CustomUser, UserAnswer
 
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from .models import CustomUser
+
 class SignUpForm(UserCreationForm):
     email = forms.EmailField(max_length=254, help_text='Required. Inform a valid email address.')
+    start_year = forms.IntegerField(required=False, help_text='Start year')
+    end_year = forms.IntegerField(required=False, help_text='End year')
+    branch = forms.CharField(max_length=100, required=False, help_text='Branch')
+    enrollment_number = forms.CharField(max_length=20, required=False, help_text='Enrollment number')
+    contact_number = forms.CharField(max_length=15, required=False, help_text='Contact number')
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'password1', 'password2')
+        fields = ('username', 'email', 'password1', 'password2', 'start_year', 'end_year', 'branch', 'enrollment_number', 'contact_number')
+
 
 class LoginForm(AuthenticationForm):
     class Meta:
