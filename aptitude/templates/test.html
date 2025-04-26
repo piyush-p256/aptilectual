@@ -605,291 +605,300 @@ body.blurred .fullscreen-button {
     <div class="warning" id="warning">You have switched tabs! Please focus on the test.</div>
     
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Get the test id from the Django template context
-        const testId = "{{ test_id }}";
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get the test id from the Django template context
+            const testId = "{{ test_id }}";
     
-        // Prevent test attempt if already cancelled for this test (via localStorage)
-        if (localStorage.getItem(`cancelledTest_${testId}`)) {
-            window.location.href = "{% url 'test_leaderboard' test_id=test_id %}";
-            return;
-        }
-    
-        const form = document.getElementById('test-form');
-        const warning = document.getElementById('warning');
-        let warningCount = 0;
-        let violationTimer = null; // Timer for detecting sustained violation
-    
-        const fullscreenButton = document.getElementById('fullscreenButton');
-        const content = document.getElementById('content');
-        let isFullscreen = false;
-    
-        function toggleBlur(state) {
-            if (state) {
-                content.classList.add('blurred');
-            } else {
-                content.classList.remove('blurred');
-            }
-        }
-    
-        // Blur background on load
-        toggleBlur(true);
-    
-        fullscreenButton.addEventListener('click', () => {
-            if (!isFullscreen) {
-                if (document.fullscreenEnabled) {
-                    document.documentElement.requestFullscreen();
-                }
-                toggleBlur(false);
-                fullscreenButton.style.display = 'none';
-                isFullscreen = true;
-            }
-        });
-    
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement) {
-                toggleBlur(true);
-                fullscreenButton.style.display = 'block';
-                isFullscreen = false;
-            }
-        });
-    
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Prevent default form submission
-    
-            const formData = new FormData(form);
-    
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                });
-    
-                const result = await response.json();
-    
-                if (result.status === 'success') {
-                    // Hide the form and timer
-                    form.style.display = 'none';
-                    document.getElementById('timer').style.display = 'none';
-    
-                    // Show the leaderboard link
-                    const message = document.createElement('p');
-                    message.classList.add('notification');
-                    message.innerHTML = '<a href="{% url "test_leaderboard" test_id=test_id %}" class="btn btn-primary">See Leaderboard</a>';
-                    document.querySelector('.form-container').appendChild(message);
-                } else if (result.status === 'error') {
-                    alert(result.message);
-                }
-            } catch (error) {
-                console.error('Submission failed:', error);
-            }
-        });
-    
-        const themeToggle = document.getElementById('themeToggle');
-        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-        const savedTheme = localStorage.getItem('theme');
-        const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
-        document.body.classList.add(initialTheme);
-        updateThemeIcon(initialTheme);
-    
-        themeToggle.addEventListener('click', () => {
-            const isLightTheme = document.body.classList.contains('light-theme');
-            const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
-            document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
-            document.body.classList.add(newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        });
-    
-        prefersDarkScheme.addEventListener('change', (e) => {
-            if (!localStorage.getItem('theme')) {
-                const newTheme = e.matches ? 'dark-theme' : 'light-theme';
-                document.body.classList.remove('dark-theme', 'light-theme');
-                document.body.classList.add(newTheme);
-                updateThemeIcon(newTheme);
-            }
-        });
-    
-        initializeNavigation();
-    
-        const timerElement = document.getElementById('timer');
-    
-        // Get test start time and duration from Django template
-        const testStartTime = new Date("{{ test.start_time|date:'Y-m-d H:i:s' }}"); // Convert Django DateTime to JS Date
-        const testDuration = {{ test.duration_in_hours }} * 60 * 60 * 1000; // Convert hours to milliseconds
-        const endTime = new Date(testStartTime.getTime() + testDuration); // Calculate end time
-    
-        const interval = setInterval(() => {
-            const now = new Date();
-            let timeLeft = Math.max(0, endTime - now); // Ensure timeLeft is not negative
-    
-            if (timeLeft <= 0) {
-                clearInterval(interval);
-                timerElement.textContent = "Time's up!";
-    
-                // Hide problems
-                document.querySelectorAll('.problem-container').forEach(container => {
-                    container.style.display = 'none';
-                });
-    
-                // Prevent duplicate message
-                if (!document.querySelector('.notification')) {
-                    const message = document.createElement('p');
-                    message.classList.add('notification');
-                    message.innerHTML = '<a href="{% url "test_leaderboard" test_id=test_id %}" class="btn btn-primary">See Leaderboard</a>';
-                    document.querySelector('.form-container').appendChild(message);
-                }
+            // Prevent test attempt if already cancelled for this test (via localStorage)
+            if (localStorage.getItem(`cancelledTest_${testId}`)) {
+                window.location.href = "{% url 'test_leaderboard' test_id=test_id %}";
                 return;
             }
     
-            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            // Push a dummy history entry so back/forward triggers popstate immediately
+            history.pushState({ test: testId }, null, window.location.href);
     
-            timerElement.textContent = `Time Left: ${hours}h ${minutes}m ${seconds}s`;
-        }, 1000);
+            const form = document.getElementById('test-form');
+            const warning = document.getElementById('warning');
+            let warningCount = 0;
+            let violationTimer = null; // Timer for detecting sustained violation
     
-        // =============================
-        // Tab/App Switching Detection
-        // =============================
+            const fullscreenButton = document.getElementById('fullscreenButton');
+            const content = document.getElementById('content');
+            let isFullscreen = false;
     
-        // Function to trigger warning and eventually cancel the test
-        function triggerViolationWarning() {
-            warningCount++;
-            warning.style.display = 'block';
-            // If three violations have occurred, cancel the test
-            if (warningCount >= 3) {
-                // End test: clear intervals and hide problems
-                clearInterval(interval);
-                const hiddenElements = document.querySelectorAll('.problem-container');
-                hiddenElements.forEach(container => {
-                    container.style.display = 'none';
-                });
-                timerElement.textContent = "Test Cancelled due to violations.";
+            function toggleBlur(state) {
+                if (state) {
+                    content.classList.add('blurred');
+                } else {
+                    content.classList.remove('blurred');
+                }
+            }
     
-                // Mark test as cancelled via AJAX call (ensure your cancel_test view accepts POST)
-                fetch("{% url 'cancel_test' test_id=test_id %}", {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': '{{ csrf_token }}'
+            // Blur background on load
+            toggleBlur(true);
+    
+            fullscreenButton.addEventListener('click', () => {
+                if (!isFullscreen) {
+                    if (document.fullscreenEnabled) {
+                        document.documentElement.requestFullscreen();
                     }
-                }).then(response => {
-                    // Optionally process the response
-                    localStorage.setItem(`cancelledTest_${testId}`, 'true');
-                    // Optionally redirect:
-                    // window.location.href = "{% url 'test_leaderboard' test_id=test_id %}";
-                }).catch(error => {
-                    console.error("Error cancelling test:", error);
-                });
-            }
-        }
+                    toggleBlur(false);
+                    fullscreenButton.style.display = 'none';
+                    isFullscreen = true;
+                }
+            });
     
-        // Clear any pending violation timer
-        function clearViolationTimer() {
-            if (violationTimer) {
-                clearTimeout(violationTimer);
-                violationTimer = null;
-            }
-            warning.style.display = 'none';
-        }
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) {
+                    toggleBlur(true);
+                    fullscreenButton.style.display = 'block';
+                    isFullscreen = false;
+                }
+            });
     
-        // Monitor visibility change (tab switching)
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                // If tab is hidden, start a 2-second timer to trigger a violation
-                violationTimer = setTimeout(triggerViolationWarning, 2000);
-            } else {
-                clearViolationTimer();
-            }
-        });
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault(); // Prevent default form submission
     
-        // Monitor window resize to detect if user is not in full-screen mode (i.e. side-by-side apps)
-        window.addEventListener('resize', () => {
-            if (!document.fullscreenElement) {
-                // Check if the window occupies less than 90% of the available screen dimensions
-                let widthRatio = window.innerWidth / window.screen.availWidth;
-                let heightRatio = window.innerHeight / window.screen.availHeight;
-                if (widthRatio < 0.9 || heightRatio < 0.9) {
+                const formData = new FormData(form);
+    
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+    
+                    const result = await response.json();
+    
+                    if (result.status === 'success') {
+                        // Hide the form and timer
+                        form.style.display = 'none';
+                        document.getElementById('timer').style.display = 'none';
+    
+                        // Show the leaderboard link
+                        const message = document.createElement('p');
+                        message.classList.add('notification');
+                        message.innerHTML = '<a href="{% url "test_leaderboard" test_id=test_id %}" class="btn btn-primary">See Leaderboard</a>';
+                        document.querySelector('.form-container').appendChild(message);
+                    } else if (result.status === 'error') {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    console.error('Submission failed:', error);
+                }
+            });
+    
+            const themeToggle = document.getElementById('themeToggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            const savedTheme = localStorage.getItem('theme');
+            const initialTheme = savedTheme || (prefersDarkScheme.matches ? 'dark-theme' : 'light-theme');
+            document.body.classList.add(initialTheme);
+            updateThemeIcon(initialTheme);
+    
+            themeToggle.addEventListener('click', () => {
+                const isLightTheme = document.body.classList.contains('light-theme');
+                const newTheme = isLightTheme ? 'dark-theme' : 'light-theme';
+                document.body.classList.remove(isLightTheme ? 'light-theme' : 'dark-theme');
+                document.body.classList.add(newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
+            });
+    
+            prefersDarkScheme.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    const newTheme = e.matches ? 'dark-theme' : 'light-theme';
+                    document.body.classList.remove('dark-theme', 'light-theme');
+                    document.body.classList.add(newTheme);
+                    updateThemeIcon(newTheme);
+                }
+            });
+    
+            initializeNavigation();
+    
+            const timerElement = document.getElementById('timer');
+    
+            // Get test start time and duration from Django template
+            const testStartTime = new Date("{{ test.start_time|date:'Y-m-d H:i:s' }}");
+            const testDuration = {{ test.duration_in_hours }} * 60 * 60 * 1000;
+            const endTime = new Date(testStartTime.getTime() + testDuration);
+    
+            const interval = setInterval(() => {
+                const now = new Date();
+                let timeLeft = Math.max(0, endTime - now);
+    
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    timerElement.textContent = "Time's up!";
+    
+                    document.querySelectorAll('.problem-container').forEach(container => {
+                        container.style.display = 'none';
+                    });
+    
+                    if (!document.querySelector('.notification')) {
+                        const message = document.createElement('p');
+                        message.classList.add('notification');
+                        message.innerHTML = '<a href="{% url "test_leaderboard" test_id=test_id %}" class="btn btn-primary">See Leaderboard</a>';
+                        document.querySelector('.form-container').appendChild(message);
+                    }
+                    return;
+                }
+    
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+    
+                timerElement.textContent = `Time Left: ${hours}h ${minutes}m ${seconds}s`;
+            }, 1000);
+    
+            // =============================
+            // Tab/App Switching Detection
+            // =============================
+    
+            function triggerViolationWarning() {
+                warningCount++;
+                warning.style.display = 'block';
+                if (warningCount >= 3) {
+                    clearInterval(interval);
+                    document.querySelectorAll('.problem-container').forEach(container => {
+                        container.style.display = 'none';
+                    });
+                    timerElement.textContent = "Test Cancelled due to violations.";
+                    fetch("{% url 'cancel_test' test_id=test_id %}", {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).then(() => {
+                        localStorage.setItem(`cancelledTest_${testId}`, 'true');
+                    }).catch(error => {
+                        console.error("Error cancelling test:", error);
+                    });
+                }
+            }
+    
+            function clearViolationTimer() {
+                if (violationTimer) {
+                    clearTimeout(violationTimer);
+                    violationTimer = null;
+                }
+                warning.style.display = 'none';
+            }
+    
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
                     violationTimer = setTimeout(triggerViolationWarning, 2000);
                 } else {
                     clearViolationTimer();
                 }
-            }
+            });
+    
+            window.addEventListener('resize', () => {
+                if (!document.fullscreenElement) {
+                    let widthRatio = window.innerWidth / window.screen.availWidth;
+                    let heightRatio = window.innerHeight / window.screen.availHeight;
+                    if (widthRatio < 0.9 || heightRatio < 0.9) {
+                        violationTimer = setTimeout(triggerViolationWarning, 2000);
+                    } else {
+                        clearViolationTimer();
+                    }
+                }
+            });
+    
+            window.addEventListener('blur', () => {
+                violationTimer = setTimeout(triggerViolationWarning, 2000);
+            });
+    
+            window.addEventListener('focus', () => {
+                clearViolationTimer();
+            });
+    
+            warning.addEventListener('animationend', () => {
+                setTimeout(() => {
+                    warning.style.display = 'none';
+                }, 5000);
+            });
+    
+            document.addEventListener('keyup', (e) => {
+                if (e.key === 'PrintScreen' || (e.key === 's' && e.shiftKey && (e.metaKey || e.ctrlKey))) {
+                    triggerViolationWarning();
+                }
+            });
+    
+            // Immediate cancel on browser back/forward navigation
+            window.addEventListener('popstate', () => {
+                clearInterval(interval);
+                document.querySelectorAll('.problem-container').forEach(container => {
+                    container.style.display = 'none';
+                });
+                timerElement.textContent = "Test Cancelled due to navigation.";
+                if (navigator.sendBeacon) {
+                    const url = "{% url 'cancel_test' test_id=test_id %}";
+                    const data = new FormData();
+                    data.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                    navigator.sendBeacon(url, data);
+                } else {
+                    fetch("{% url 'cancel_test' test_id=test_id %}", {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).catch(() => {});
+                }
+                localStorage.setItem(`cancelledTest_${testId}`, 'true');
+                window.location.href = "{% url 'test_leaderboard' test_id=test_id %}";
+            });
+    
         });
     
-        // Monitor window blur/focus to detect when another app or browser window is opened on top
-        window.addEventListener('blur', () => {
-            violationTimer = setTimeout(triggerViolationWarning, 2000);
-        });
-    
-        window.addEventListener('focus', () => {
-            clearViolationTimer();
-        });
-    
-        // Hide warning after its animation ends (if using CSS animation)
-        warning.addEventListener('animationend', () => {
-            setTimeout(() => {
-                warning.style.display = 'none';
-            }, 5000);
-        });
-    });
-    
-    function updateThemeIcon(theme) {
-        const themeToggle = document.getElementById('themeToggle');
-        themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
-    }
-    
-    function initializeNavigation() {
-        const burger = document.querySelector('.burger');
-        const nav = document.querySelector('.nav-links');
-        const navLinks = document.querySelectorAll('.nav-links li');
-        const closeMenu = document.querySelector('.close-menu');
-    
-        function toggleMenu() {
-            nav.classList.toggle('nav-active');
-            burger.classList.toggle('toggle');
+        function updateThemeIcon(theme) {
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.innerHTML = theme === 'light-theme' ? '🌙' : '☀️';
         }
     
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (nav.classList.contains('nav-active') &&
-                !nav.contains(e.target) &&
-                !burger.contains(e.target)) {
-                toggleMenu();
+        function initializeNavigation() {
+            const burger = document.querySelector('.burger');
+            const nav = document.querySelector('.nav-links');
+            const navLinks = document.querySelectorAll('.nav-links li');
+            const closeMenu = document.querySelector('.close-menu');
+    
+            function toggleMenu() {
+                nav.classList.toggle('nav-active');
+                burger.classList.toggle('toggle');
             }
-        });
     
-        // Toggle menu on burger click
-        burger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleMenu();
-        });
-    
-        // Close menu on X button click
-        if (closeMenu) {
-            closeMenu.addEventListener('click', toggleMenu);
-        }
-    
-        // Close menu when clicking a link
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                if (nav.classList.contains('nav-active')) {
+            document.addEventListener('click', (e) => {
+                if (nav.classList.contains('nav-active') &&
+                    !nav.contains(e.target) &&
+                    !burger.contains(e.target)) {
                     toggleMenu();
                 }
             });
-        });
-    }
-    document.addEventListener('keyup', (e) => {
-    if ((e.key === 'PrintScreen') || (e.key === 's' && e.shiftKey && (e.metaKey || e.ctrlKey))) {
-        triggerViolationWarning();
-    }
-});
-
+    
+            burger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu();
+            });
+    
+            if (closeMenu) {
+                closeMenu.addEventListener('click', toggleMenu);
+            }
+    
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (nav.classList.contains('nav-active')) {
+                        toggleMenu();
+                    }
+                });
+            });
+        }
     </script>
+    
+    
 
 <script>
     document.addEventListener("contextmenu", function (event) {
