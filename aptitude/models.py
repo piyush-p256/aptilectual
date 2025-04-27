@@ -56,6 +56,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_position_count = models.IntegerField(default=0)
     second_position_count = models.IntegerField(default=0)
     third_position_count = models.IntegerField(default=0)
+    last_active_date = models.DateField(null=True, blank=True)
+
     
     groups = models.ManyToManyField(
         Group,
