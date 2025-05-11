@@ -136,7 +136,7 @@ class Company(models.Model):
     name = models.CharField(max_length=255, unique=True)
     logo_url = models.URLField(null=True, blank=True)
     hired_last_year = models.IntegerField(null=True, blank=True)  # New field
-    description = models.CharField(max_length=500, null=True, blank=True)  # New field
+    description = models.CharField(max_length=5000, null=True, blank=True)  # New field
 
     def __str__(self):
         return self.name
