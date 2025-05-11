@@ -10,7 +10,8 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ('is_staff', 'is_active')
     fieldsets = (
         (None, {'fields': ('email', 'username', 'password')}),
-        ('Personal Info', {'fields': ('profile_picture', 'bio')}),
+        ('Personal Info', {'fields': ('profile_picture', 'bio', 'start_year', 'end_year',
+                'branch', 'enrollment_number', 'contact_number')}),
         ('Permissions', {'fields': ('is_staff', 'is_active', 'groups', 'user_permissions')}),
         ('Stats', {'fields': ('total_attempted', 'total_correct', 'current_streak', 'highest_streak', 'rating', 'last_active_date')}),
         ('Achievements', {'fields': ('achievements',)}),
@@ -25,6 +26,8 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ('email', 'username')
     ordering = ('email',)
     filter_horizontal = ('groups', 'user_permissions', 'achievements')
+
+
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Problem)
