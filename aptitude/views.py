@@ -497,12 +497,22 @@ def placement_drive(request):
             total_backlog_ok = (user.total_backlogs is not None and user.total_backlogs <= int(company.total_backlog))
         if company.active_backlog and company.active_backlog.isdigit():
             active_backlog_ok = (user.active_backlogs is not None and user.active_backlogs <= int(company.active_backlog))
+        # Branch eligibility
+        branch_ok = True
+        if hasattr(company, 'branches') and company.branches:
+            if isinstance(company.branches, (list, tuple)):
+                branch_ok = user.branch in company.branches
+            else:
+                # CharField: comma-separated
+                allowed_branches = [b.strip() for b in company.branches.split(',') if b.strip()]
+                branch_ok = user.branch in allowed_branches
         eligible = (
             (user.total_percentage is not None and user.total_percentage >= company.min_percent) and
             (user.cgpa is not None and user.cgpa >= company.min_cgpa) and
             total_backlog_ok and
             active_backlog_ok and
-            (user.end_year is not None and company.for_batch == user.end_year)
+            (user.end_year is not None and company.for_batch == user.end_year) and
+            branch_ok
         )
         # Add class 12/10 percent check if company has set it
         if company.class12_10_percent is not None:

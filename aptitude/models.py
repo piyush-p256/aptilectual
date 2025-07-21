@@ -2,6 +2,19 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
+try:
+    from multiselectfield import MultiSelectField
+    MULTISELECT_AVAILABLE = True
+except ImportError:
+    MULTISELECT_AVAILABLE = False
+
+BRANCH_CHOICES = [
+    ('IT', 'IT'),
+    ('CSE', 'CSE'),
+    ('ECE', 'ECE'),
+    ('EEE', 'EEE'),
+    ('ICE', 'ICE'),
+]
 
 
 class CustomUserManager(BaseUserManager):
@@ -198,13 +211,18 @@ class PlacementCompany(models.Model):
     ctc = models.CharField(max_length=100)
     min_percent = models.FloatField()
     min_cgpa = models.FloatField()
-    total_backlog = models.CharField(max_length=20, blank=True)
-    active_backlog = models.CharField(max_length=20, blank=True)
+    total_backlog = models.CharField(max_length=30, blank=True)
+    active_backlog = models.CharField(max_length=30, blank=True)
     description = models.CharField(max_length=2000)
     apply_link = models.URLField()
     deadline = models.DateTimeField()
     logo_url = models.URLField()
     class12_10_percent = models.FloatField(null=True, blank=True)
+
+    if MULTISELECT_AVAILABLE:
+        branches = MultiSelectField(choices=BRANCH_CHOICES, blank=True)
+    else:
+        branches = models.CharField(max_length=100, blank=True, help_text='Comma-separated branches (e.g. IT,CSE)')
 
     def __str__(self):
         return f"{self.company_name} - {self.role_offered} ({self.for_batch})"
