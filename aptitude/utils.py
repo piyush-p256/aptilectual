@@ -1,3 +1,6 @@
+from django.core.mail import send_mail
+import random
+
 def update_rating(user, is_correct, context='daily'):
     """
     A simple rating update helper function.
@@ -12,3 +15,10 @@ def update_rating(user, is_correct, context='daily'):
     elif context == 'test':
         bonus += 20  # Example bonus for tests
     return base_rating + bonus
+
+def send_otp_email(email, otp):
+    subject = 'Your OTP for Signup Verification'
+    message = f'Your OTP for signup is: {otp}\nThis OTP is valid for 10 minutes.'
+    from_email = None  # Uses DEFAULT_FROM_EMAIL from settings
+    recipient_list = [email]
+    send_mail(subject, message, from_email, recipient_list)

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP</title>
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f4f7f9; color: #333; }
+        .form-container { max-width: 400px; margin: 5rem auto; background: #fff; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; }
+        .form-group { margin-bottom: 1.5rem; text-align: left; }
+        .form-group label { display: block; margin-bottom: 0.5rem; }
+        .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 5px; font-size: 1rem; }
+        .btn { background: #3498db; color: #fff; border: none; border-radius: 5px; padding: 0.75rem; width: 100%; font-size: 1rem; cursor: pointer; }
+        .btn:hover { background: #2980b9; }
+        .error { color: #e74c3c; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <section class="form-container">
+        <h1>Verify OTP</h1>
+        <p>Please enter the 6-digit OTP sent to your email address.</p>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="otp">OTP</label>
+                <input type="text" id="otp" name="otp" maxlength="6" pattern="\d{6}" required placeholder="Enter OTP">
+            </div>
+            <button type="submit" class="btn">Verify</button>
+        </form>
+    </section>
+</body>
+</html> 

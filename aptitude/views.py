@@ -1,4 +1,3 @@
-import traceback
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
@@ -12,18 +11,54 @@ from .models import (
     LeaderDaily, Company, TestAnswer, Achievement
 )
 from .forms import SignUpForm, LoginForm, SubmissionForm
-from .utils import update_rating
+from .utils import update_rating, send_otp_email
 from django.db import transaction
+import random
 
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('login')
+            # Store all form data in session, including password1 and password2
+            form_data = form.cleaned_data.copy()
+            # Instead of cleaned_data, use request.POST to preserve raw passwords
+            session_data = request.POST.dict()
+            otp = '{:06d}'.format(random.randint(0, 999999))
+            request.session['signup_form_data'] = session_data
+            request.session['signup_otp'] = otp
+            request.session['signup_otp_email'] = session_data['email']
+            request.session['signup_otp_verified'] = False
+            send_otp_email(session_data['email'], otp)
+            return redirect('verify_otp')
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
+
+
+def verify_otp(request):
+    if not request.session.get('signup_form_data'):
+        return redirect('signup')
+    error = None
+    if request.method == 'POST':
+        entered_otp = request.POST.get('otp')
+        session_otp = request.session.get('signup_otp')
+        if entered_otp == session_otp:
+            # OTP correct, create user
+            form_data = request.session.get('signup_form_data')
+            from .forms import SignUpForm
+            form = SignUpForm(form_data)
+            if form.is_valid():
+                form.save()
+                # Clear session
+                for key in ['signup_form_data', 'signup_otp', 'signup_otp_email', 'signup_otp_verified']:
+                    if key in request.session:
+                        del request.session[key]
+                return redirect('login')
+            else:
+                error = 'There was an error creating your account. Please try again.'
+        else:
+            error = 'Invalid OTP. Please try again.'
+    return render(request, 'verify_otp.html', {'error': error})
 
 
 def login_view(request):
@@ -37,6 +72,7 @@ def login_view(request):
         form = LoginForm()
     return render(request, 'login.html', {'form': form})
 
+ 
 
 def home(request):
     return render(request, 'home.html')
