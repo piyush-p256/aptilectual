@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for {{ company.company_name }} - {{ company.role_offered }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin: 4rem auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+            padding: 2rem 2.5rem;
+        }
+        h1 {
+            color: #3498db;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .company-details {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .company-details strong {
+            color: #3498db;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1rem;
+            background: #f9fbfd;
+            color: #333;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .form-actions {
+            margin-top: 2rem;
+        }
+        .form-actions .btn {
+            width: 100%;
+            background: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .form-actions .btn:hover {
+            background: #217dbb;
+        }
+        .info-icon {
+            display: inline-block;
+            margin-left: 6px;
+            color: #3498db;
+            cursor: pointer;
+            position: relative;
+        }
+        .info-tooltip {
+            display: none;
+            position: absolute;
+            left: 120%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #fff;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0.7rem 1rem;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            z-index: 10;
+            min-width: 220px;
+        }
+        .info-icon:hover .info-tooltip {
+            display: block;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Apply for {{ company.company_name }}</h1>
+        <div class="company-details">
+            <strong>Role:</strong> {{ company.role_offered }}<br>
+            <strong>Batch:</strong> {{ company.for_batch }}<br>
+            <strong>Deadline:</strong> {{ company.deadline|date:'Y-m-d H:i' }}<br>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_name">Full Name</label>
+                {{ form.name }}
+            </div>
+            <div class="form-group">
+                <label for="id_branch">Branch</label>
+                {{ form.branch }}
+            </div>
+            <div class="form-group">
+                <label for="id_enrollment_number">Enrollment Number</label>
+                {{ form.enrollment_number }}
+            </div>
+            <div class="form-group">
+                <label for="id_student_class">Class</label>
+                {{ form.student_class }}
+            </div>
+            <div class="form-group">
+                <label for="id_cgpa">CGPA</label>
+                {{ form.cgpa }}
+            </div>
+            <div class="form-group">
+                <label for="id_total_percentage">Total Percentage</label>
+                {{ form.total_percentage }}
+            </div>
+            <div class="form-group">
+                <label for="id_resume_link">Resume Link
+                    <span class="info-icon">&#9432;
+                        <span class="info-tooltip">Make sure your resume link is set to public.</span>
+                    </span>
+                </label>
+                {{ form.resume_link }}
+            </div>
+            <div class="form-group">
+                <label for="id_github_link">GitHub Link</label>
+                {{ form.github_link }}
+            </div>
+            <div class="form-group">
+                <label for="id_linkedin_link">LinkedIn Link</label>
+                {{ form.linkedin_link }}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn">Submit Application</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html> 

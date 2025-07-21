@@ -225,6 +225,7 @@ class PlacementCompany(models.Model):
     deadline = models.DateTimeField()
     logo_url = models.URLField()
     class12_10_percent = models.FloatField(null=True, blank=True)
+    generate_form = models.BooleanField(default=False, help_text='Generate application form for this company')
 
     if MULTISELECT_AVAILABLE:
         branches = MultiSelectField(choices=BRANCH_CHOICES, blank=True)
@@ -277,3 +278,24 @@ Apply fast using the link below:
 T&P Cell
 """
         send_mail(subject, details, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
+
+
+class PlacementApplication(models.Model):
+    company = models.ForeignKey(PlacementCompany, on_delete=models.CASCADE)
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    branch = models.CharField(max_length=100)
+    enrollment_number = models.CharField(max_length=100)
+    student_class = models.IntegerField(null=True, blank=True)
+    cgpa = models.FloatField(null=True, blank=True)
+    total_percentage = models.FloatField(null=True, blank=True)
+    resume_link = models.URLField()
+    github_link = models.URLField(blank=True)
+    linkedin_link = models.URLField(blank=True)
+    applied_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('company', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.company.company_name}"

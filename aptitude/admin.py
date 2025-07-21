@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Achievement, CancelledTest, CustomUser, Problem, Test, TestAnswer, UserAnswer, LeaderDaily, Company, PlacementCompany
+from .models import Achievement, CancelledTest, CustomUser, Problem, Test, TestAnswer, UserAnswer, LeaderDaily, Company, PlacementCompany, PlacementApplication
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
@@ -51,3 +51,4 @@ admin.site.register(Test)
 admin.site.register(CancelledTest)
 admin.site.register(Achievement)
 admin.site.register(PlacementCompany)
+admin.site.register(PlacementApplication)

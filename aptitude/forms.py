@@ -2,7 +2,7 @@
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import CustomUser, UserAnswer
+from .models import CustomUser, UserAnswer, PlacementApplication
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
@@ -34,3 +34,13 @@ class SubmissionForm(forms.ModelForm):
     class Meta:
         model = UserAnswer
         fields = ['selected_option', 'solution_image_url']
+
+class PlacementApplicationForm(forms.ModelForm):
+    class Meta:
+        model = PlacementApplication
+        fields = ['name', 'branch', 'enrollment_number', 'student_class', 'cgpa', 'total_percentage', 'resume_link', 'github_link', 'linkedin_link']
+        widgets = {
+            'resume_link': forms.URLInput(attrs={'placeholder': 'Paste your public resume link'}),
+            'github_link': forms.URLInput(attrs={'placeholder': 'Paste your GitHub profile link (optional)'}),
+            'linkedin_link': forms.URLInput(attrs={'placeholder': 'Paste your LinkedIn profile link (optional)'}),
+        }

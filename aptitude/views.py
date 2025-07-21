@@ -8,12 +8,17 @@ from django.db.utils import IntegrityError
 from datetime import timedelta
 from .models import (
     CancelledTest, Problem, Test, UserAnswer, CustomUser,
-    LeaderDaily, Company, TestAnswer, Achievement, PlacementCompany
+    LeaderDaily, Company, TestAnswer, Achievement, PlacementCompany, PlacementApplication
 )
-from .forms import SignUpForm, LoginForm, SubmissionForm
+from .forms import SignUpForm, LoginForm, SubmissionForm, PlacementApplicationForm
 from .utils import update_rating, send_otp_email
 from django.db import transaction
 import random
+from django.urls import reverse
+from django.http import HttpResponseForbidden
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 def signup(request):
     if request.method == 'POST':
@@ -526,3 +531,74 @@ def placement_drive(request):
             'deadline_passed': deadline_passed
         })
     return render(request, 'placement-drive.html', {'company_list': company_list})
+
+
+def is_user_eligible_for_company(user, company):
+    # Copy the eligibility logic from placement_drive
+    total_backlog_ok = True
+    active_backlog_ok = True
+    if company.total_backlog and company.total_backlog.isdigit():
+        total_backlog_ok = (user.total_backlogs is not None and user.total_backlogs <= int(company.total_backlog))
+    if company.active_backlog and company.active_backlog.isdigit():
+        active_backlog_ok = (user.active_backlogs is not None and user.active_backlogs <= int(company.active_backlog))
+    branch_ok = True
+    if hasattr(company, 'branches') and company.branches:
+        if isinstance(company.branches, (list, tuple)):
+            branch_ok = user.branch in company.branches
+        else:
+            allowed_branches = [b.strip() for b in company.branches.split(',') if b.strip()]
+            branch_ok = user.branch in allowed_branches
+    eligible = (
+        (user.total_percentage is not None and user.total_percentage >= company.min_percent) and
+        (user.cgpa is not None and user.cgpa >= company.min_cgpa) and
+        total_backlog_ok and
+        active_backlog_ok and
+        (user.end_year is not None and company.for_batch == user.end_year) and
+        branch_ok
+    )
+    if company.class12_10_percent is not None:
+        eligible = eligible and (
+            (user.class12_percentage is not None and user.class12_percentage >= company.class12_10_percent) and
+            (user.class10_percentage is not None and user.class10_percentage >= company.class12_10_percent)
+        )
+    return eligible
+
+
+@login_required
+def placement_application(request, company_id):
+    company = get_object_or_404(PlacementCompany, id=company_id)
+    if not is_user_eligible_for_company(request.user, company):
+        return HttpResponseForbidden("You are not eligible to apply for this opportunity.")
+    # Check if already applied
+    if PlacementApplication.objects.filter(company=company, user=request.user).exists():
+        return render(request, 'already_applied.html', {'company': company})
+    if request.method == 'POST':
+        form = PlacementApplicationForm(request.POST)
+        if form.is_valid():
+            app = form.save(commit=False)
+            app.company = company
+            app.user = request.user
+            app.save()
+            return render(request, 'application_success.html', {'company': company})
+    else:
+        # Prefill user data
+        form = PlacementApplicationForm(initial={
+            'name': request.user.name,
+            'branch': request.user.branch,
+            'enrollment_number': request.user.enrollment_number,
+            'student_class': request.user.student_class,
+            'cgpa': request.user.cgpa,
+            'total_percentage': request.user.total_percentage,
+        })
+    return render(request, 'placement_application_form.html', {'form': form, 'company': company})
+
+# Hook: When PlacementCompany is created/updated with generate_form=True, set apply_link
+@receiver(post_save, sender=PlacementCompany)
+def set_apply_link(sender, instance, created, **kwargs):
+    if instance.generate_form:
+        url = reverse('placement_application', args=[instance.id])
+        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        full_url = site_url + url
+        if instance.apply_link != full_url:
+            instance.apply_link = full_url
+            instance.save(update_fields=['apply_link'])
