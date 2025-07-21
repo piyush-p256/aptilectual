@@ -57,6 +57,20 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     second_position_count = models.IntegerField(default=0)
     third_position_count = models.IntegerField(default=0)
     last_active_date = models.DateField(null=True, blank=True)
+    sem1_sgpa = models.FloatField(null=True, blank=True)
+    sem2_sgpa = models.FloatField(null=True, blank=True)
+    sem3_sgpa = models.FloatField(null=True, blank=True)
+    sem4_sgpa = models.FloatField(null=True, blank=True)
+    sem5_sgpa = models.FloatField(null=True, blank=True)
+    sem6_sgpa = models.FloatField(null=True, blank=True)
+    sem7_sgpa = models.FloatField(null=True, blank=True)
+    sem8_sgpa = models.FloatField(null=True, blank=True)
+    cgpa = models.FloatField(null=True, blank=True)
+    active_backlogs = models.IntegerField(default=0)
+    total_backlogs = models.IntegerField(default=0)
+    class12_percentage = models.FloatField(null=True, blank=True)
+    class10_percentage = models.FloatField(null=True, blank=True)
+    total_percentage = models.FloatField(null=True, blank=True)
 
     
     groups = models.ManyToManyField(
@@ -175,3 +189,22 @@ class CancelledTest(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - Test ID: {self.test_id}"
+
+
+class PlacementCompany(models.Model):
+    for_batch = models.IntegerField()
+    company_name = models.CharField(max_length=255)
+    role_offered = models.CharField(max_length=255)
+    ctc = models.CharField(max_length=100)
+    min_percent = models.FloatField()
+    min_cgpa = models.FloatField()
+    total_backlog = models.IntegerField()
+    active_backlog = models.IntegerField()
+    description = models.CharField(max_length=2000)
+    apply_link = models.URLField()
+    deadline = models.DateTimeField()
+    logo_url = models.URLField()
+    class12_10_percent = models.FloatField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.company_name} - {self.role_offered} ({self.for_batch})"

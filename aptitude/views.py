@@ -8,7 +8,7 @@ from django.db.utils import IntegrityError
 from datetime import timedelta
 from .models import (
     CancelledTest, Problem, Test, UserAnswer, CustomUser,
-    LeaderDaily, Company, TestAnswer, Achievement
+    LeaderDaily, Company, TestAnswer, Achievement, PlacementCompany
 )
 from .forms import SignUpForm, LoginForm, SubmissionForm
 from .utils import update_rating, send_otp_email
@@ -481,3 +481,31 @@ def cancel_test(request, test_id):
     test = get_object_or_404(Test, test_id=test_id)
     CancelledTest.objects.create(user=request.user, test_id=test_id)
     return redirect('test_leaderboard', test_id=test_id)
+
+
+@login_required
+def placement_drive(request):
+    user = request.user
+    companies = PlacementCompany.objects.all().order_by('deadline')
+    company_list = []
+    for company in companies:
+        deadline_passed = company.deadline < timezone.now()
+        eligible = (
+            (user.total_percentage is not None and user.total_percentage >= company.min_percent) and
+            (user.cgpa is not None and user.cgpa >= company.min_cgpa) and
+            (user.total_backlogs is not None and user.total_backlogs <= company.total_backlog) and
+            (user.active_backlogs is not None and user.active_backlogs <= company.active_backlog) and
+            (user.end_year is not None and company.for_batch == user.end_year)
+        )
+        # Add class 12/10 percent check if company has set it
+        if company.class12_10_percent is not None:
+            eligible = eligible and (
+                (user.class12_percentage is not None and user.class12_percentage >= company.class12_10_percent) and
+                (user.class10_percentage is not None and user.class10_percentage >= company.class12_10_percent)
+            )
+        company_list.append({
+            'company': company,
+            'eligible': eligible,
+            'deadline_passed': deadline_passed
+        })
+    return render(request, 'placement-drive.html', {'company_list': company_list})
