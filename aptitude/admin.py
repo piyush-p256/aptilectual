@@ -9,12 +9,14 @@ class CustomUserAdmin(UserAdmin):
     list_display = (
         'email', 'username', 'is_staff', 'is_active', 'date_joined', 'rating', 'current_streak', 'highest_streak',
         'cgpa', 'total_percentage', 'class12_percentage', 'class10_percentage',
-        'active_backlogs', 'total_backlogs'
+        'active_backlogs', 'total_backlogs',
+        'name', 'student_class'
     )
     list_filter = ('is_staff', 'is_active')
     fieldsets = (
         (None, {'fields': ('email', 'username', 'password')}),
         ('Personal Info', {'fields': (
+            'name', 'student_class',
             'profile_picture', 'bio', 'start_year', 'end_year',
             'branch', 'enrollment_number', 'contact_number',
             'sem1_sgpa', 'sem2_sgpa', 'sem3_sgpa', 'sem4_sgpa',

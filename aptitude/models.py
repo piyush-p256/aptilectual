@@ -7,6 +7,11 @@ try:
     MULTISELECT_AVAILABLE = True
 except ImportError:
     MULTISELECT_AVAILABLE = False
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.mail import send_mail
+from django.urls import reverse
+from django.conf import settings
 
 BRANCH_CHOICES = [
     ('IT', 'IT'),
@@ -84,6 +89,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     class12_percentage = models.FloatField(null=True, blank=True)
     class10_percentage = models.FloatField(null=True, blank=True)
     total_percentage = models.FloatField(null=True, blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    student_class = models.IntegerField(null=True, blank=True)
 
     
     groups = models.ManyToManyField(
@@ -226,3 +233,47 @@ class PlacementCompany(models.Model):
 
     def __str__(self):
         return f"{self.company_name} - {self.role_offered} ({self.for_batch})"
+
+
+@receiver(post_save, sender=PlacementCompany)
+def notify_users_on_new_placement(sender, instance, created, **kwargs):
+    if not created:
+        return
+    # Get eligible users
+    from .models import CustomUser
+    batch = instance.for_batch
+    # Determine allowed branches
+    if hasattr(instance, 'branches') and instance.branches:
+        if isinstance(instance.branches, (list, tuple)):
+            allowed_branches = set(instance.branches)
+        else:
+            allowed_branches = set([b.strip() for b in instance.branches.split(',') if b.strip()])
+    else:
+        allowed_branches = set()
+    users = CustomUser.objects.filter(end_year=batch)
+    if allowed_branches:
+        users = users.filter(branch__in=allowed_branches)
+    # Compose email
+    for user in users:
+        subject = f"New Placement Opportunity: {instance.company_name} ({instance.role_offered})"
+        placement_url = settings.SITE_URL + reverse('placement_drive')
+        details = f"""
+Hello {user.username},
+
+The placement cell is announcing a new placement opportunity!
+
+Company: {instance.company_name}
+Role: {instance.role_offered}
+Batch: {instance.for_batch}
+Branches: {', '.join(allowed_branches) if allowed_branches else 'All'}
+CTC: {instance.ctc}
+Min %: {instance.min_percent}
+Min CGPA: {instance.min_cgpa}
+Deadline: {instance.deadline.strftime('%Y-%m-%d %H:%M')}
+
+Apply fast using the link below:
+{placement_url}
+
+T&P Cell
+"""
+        send_mail(subject, details, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
