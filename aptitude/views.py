@@ -490,11 +490,18 @@ def placement_drive(request):
     company_list = []
     for company in companies:
         deadline_passed = company.deadline < timezone.now()
+        # Backlog checks: only if the field is a digit
+        total_backlog_ok = True
+        active_backlog_ok = True
+        if company.total_backlog and company.total_backlog.isdigit():
+            total_backlog_ok = (user.total_backlogs is not None and user.total_backlogs <= int(company.total_backlog))
+        if company.active_backlog and company.active_backlog.isdigit():
+            active_backlog_ok = (user.active_backlogs is not None and user.active_backlogs <= int(company.active_backlog))
         eligible = (
             (user.total_percentage is not None and user.total_percentage >= company.min_percent) and
             (user.cgpa is not None and user.cgpa >= company.min_cgpa) and
-            (user.total_backlogs is not None and user.total_backlogs <= company.total_backlog) and
-            (user.active_backlogs is not None and user.active_backlogs <= company.active_backlog) and
+            total_backlog_ok and
+            active_backlog_ok and
             (user.end_year is not None and company.for_batch == user.end_year)
         )
         # Add class 12/10 percent check if company has set it
