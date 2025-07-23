@@ -1,0 +1,128 @@
+{% if auth_required %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Page Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f4f7f9; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 350px; margin: 4rem auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.10); padding: 2rem 2.5rem; }
+        h1 { color: #3498db; text-align: center; margin-bottom: 2rem; }
+        .error { color: #e74c3c; text-align: center; margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        input[type="password"] { width: 100%; padding: 0.7rem; border: 1px solid #e0e0e0; border-radius: 5px; font-size: 1rem; margin-bottom: 1rem; }
+        button { width: 100%; background: #3498db; color: #fff; border: none; border-radius: 5px; padding: 0.75rem; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #217dbb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Email Page Login</h1>
+        {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <label for="email_page_password">Enter Password:</label>
+            <input type="password" id="email_page_password" name="email_page_password" required>
+            <button type="submit">Enter</button>
+        </form>
+    </div>
+</body>
+</html>
+{% else %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Send Custom Email</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f4f7f9; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 700px; margin: 4rem auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.10); padding: 2rem 2.5rem; }
+        h1 { color: #3498db; text-align: center; margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; font-size: 1rem; color: #333; margin-bottom: 0.5rem; font-weight: 600; }
+        .checkbox-group, .radio-group { display: flex; flex-wrap: wrap; gap: 1rem; }
+        .checkbox-group label, .radio-group label { font-weight: 400; }
+        .form-group input[type="text"], .form-group textarea, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 5px; font-size: 1rem; background: #f9fbfd; color: #333; transition: border-color 0.3s; }
+        .form-group textarea { min-height: 100px; font-family: monospace; }
+        .form-actions { margin-top: 2rem; }
+        .form-actions .btn { width: 100%; background: #3498db; color: #fff; border: none; border-radius: 5px; padding: 0.75rem; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .form-actions .btn:hover { background: #217dbb; }
+        .success { color: #27ae60; text-align: center; margin-bottom: 1rem; }
+        .error { color: #e74c3c; text-align: center; margin-bottom: 1rem; }
+        .note { color: #888; font-size: 0.95rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Send Custom Email</h1>
+        <div class="note">Enter your email content as <b>HTML</b> (e.g., <code>&lt;h1&gt;Title&lt;/h1&gt;</code>, <code>&lt;p style='color:red;'&gt;Red text&lt;/p&gt;</code>, <code>&lt;a href='url'&gt;Link&lt;/a&gt;</code>).<br>You can also attach files (images, PDFs, etc.).</div>
+        {% if message_sent %}
+            <div class="success">Email sent successfully!</div>
+        {% endif %}
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Batches:</label>
+                <div class="checkbox-group">
+                    {% for batch in batches %}
+                        <label><input type="checkbox" name="batch" value="{{ batch }}"> {{ batch }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Branches:</label>
+                <div class="checkbox-group">
+                    {% for branch in branches %}
+                        <label><input type="checkbox" name="branch" value="{{ branch }}"> {{ branch }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Company (Eligibility/Registration Filter):</label>
+                <select name="company" id="company-select">
+                    <option value="">-- None --</option>
+                    {% for company in companies %}
+                        <option value="{{ company.id }}">{{ company.company_name }} ({{ company.for_batch }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Eligibility:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="eligibility_type" value="eligible_only"> Eligible Only</label>
+                    <label><input type="radio" name="eligibility_type" value="all" checked> All</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Registration Status:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="registration_type" value="registered"> Registered</label>
+                    <label><input type="radio" name="registration_type" value="not_registered"> Not Registered</label>
+                    <label><input type="radio" name="registration_type" value="" checked> Both</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="subject">Subject:</label>
+                <input type="text" id="subject" name="subject" required>
+            </div>
+            <div class="form-group">
+                <label for="message">Message (HTML):</label>
+                <textarea id="message" name="message" required placeholder="&lt;h1&gt;Title&lt;/h1&gt;\n&lt;p&gt;Your content here&lt;/p&gt;\n..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="attachments">Attachments:</label>
+                <input type="file" id="attachments" name="attachments" multiple>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn">Send Email</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+{% endif %} 

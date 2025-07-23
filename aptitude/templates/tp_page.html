@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>T&P - Company Applications</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f4f7f9; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 700px; margin: 4rem auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.10); padding: 2rem 2.5rem; }
+        h1 { color: #3498db; text-align: center; margin-bottom: 2rem; }
+        .company-list { margin-top: 2rem; }
+        .company-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid #e0e0e0; }
+        .company-name { font-weight: 600; font-size: 1.1rem; }
+        .download-btn { background: #3498db; color: #fff; border: none; border-radius: 5px; padding: 0.5rem 1.2rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .download-btn:hover { background: #217dbb; }
+        .error { color: #e74c3c; text-align: center; margin-bottom: 1rem; }
+        .password-form { max-width: 350px; margin: 4rem auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.10); padding: 2rem 2.5rem; }
+        .password-form label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .password-form input[type="password"] { width: 100%; padding: 0.7rem; border: 1px solid #e0e0e0; border-radius: 5px; font-size: 1rem; margin-bottom: 1rem; }
+        .password-form button { width: 100%; background: #3498db; color: #fff; border: none; border-radius: 5px; padding: 0.75rem; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .password-form button:hover { background: #217dbb; }
+    </style>
+</head>
+<body>
+    {% if auth_required %}
+        <form method="post" class="password-form">
+            {% csrf_token %}
+            <h1>T&P Login</h1>
+            {% if error %}<div class="error">{{ error }}</div>{% endif %}
+            <label for="tp_password">Enter Password:</label>
+            <input type="password" id="tp_password" name="tp_password" required>
+            <button type="submit">Enter</button>
+        </form>
+    {% else %}
+        <div class="container">
+            <h1>T&P - Company Applications</h1>
+            <div class="company-list">
+                {% if companies %}
+                    {% for company in companies %}
+                        <div class="company-item">
+                            <span class="company-name">{{ company.company_name }} ({{ company.for_batch }})</span>
+                            <a href="{% url 'tp_download_excel' company.id %}" class="download-btn">Download Excel</a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div>No companies with forms found.</div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</body>
+</html> 

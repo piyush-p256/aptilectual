@@ -59,7 +59,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     start_year = models.IntegerField(null=True, blank=True)
     end_year = models.IntegerField(null=True, blank=True)
     branch = models.CharField(max_length=100, null=True, blank=True)
-    enrollment_number = models.CharField(max_length=100, null=True, blank=True)
+    enrollment_number = models.CharField(max_length=100, null=True, blank=True, unique=True)
     contact_number = models.CharField(max_length=15, null=True, blank=True)
     total_attempted = models.IntegerField(default=0)
     total_correct = models.IntegerField(default=0)

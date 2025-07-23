@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Count, Min, Q, F
 from django.http import JsonResponse
+from django.contrib import messages
 from django.db.utils import IntegrityError
 from datetime import timedelta
 from .models import (
@@ -19,6 +20,16 @@ from django.http import HttpResponseForbidden
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.http import HttpResponse
+import openpyxl
+from django.core.mail import send_mail, EmailMessage
+import csv
+from .models import CustomUser  # Adjust if your user model is named differently
+from io import TextIOWrapper
+
+TP_PASSWORD = 'tpsecret123'  # Change this to your desired password
+EMAIL_PAGE_PASSWORD = 'emailsecret123'  # Change as needed
+UPLOAD_CSV_PASSWORD = 'csvsecret123'  # Change this to your desired password
 
 def signup(request):
     if request.method == 'POST':
@@ -590,6 +601,8 @@ def placement_application(request, company_id):
             'cgpa': request.user.cgpa,
             'total_percentage': request.user.total_percentage,
         })
+        for field in ['name', 'branch', 'enrollment_number', 'student_class', 'cgpa', 'total_percentage']:
+           form.fields[field].widget.attrs['disabled'] = 'disabled'
     return render(request, 'placement_application_form.html', {'form': form, 'company': company})
 
 # Hook: When PlacementCompany is created/updated with generate_form=True, set apply_link
@@ -602,3 +615,165 @@ def set_apply_link(sender, instance, created, **kwargs):
         if instance.apply_link != full_url:
             instance.apply_link = full_url
             instance.save(update_fields=['apply_link'])
+
+
+def tp_page(request):
+    if not request.session.get('tp_authenticated'):
+        if request.method == 'POST':
+            password = request.POST.get('tp_password')
+            if password == TP_PASSWORD:
+                request.session['tp_authenticated'] = True
+            else:
+                return render(request, 'tp_page.html', {'auth_required': True, 'error': 'Invalid password'})
+        else:
+            return render(request, 'tp_page.html', {'auth_required': True})
+    companies = PlacementCompany.objects.filter(generate_form=True)
+    return render(request, 'tp_page.html', {'companies': companies, 'auth_required': False})
+
+def tp_download_excel(request, company_id):
+    company = get_object_or_404(PlacementCompany, id=company_id)
+    applications = PlacementApplication.objects.filter(company=company)
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Applications'
+    ws.append([
+        'Name', 'Branch', 'Enrollment Number', 'Class', 'CGPA', 'Total Percentage',
+        'Resume Link', 'GitHub Link', 'LinkedIn Link', 'Applied At', 'User Email'
+    ])
+    for app in applications:
+        ws.append([
+            app.name, app.branch, app.enrollment_number, app.student_class, app.cgpa, app.total_percentage,
+            app.resume_link, app.github_link, app.linkedin_link, app.applied_at.strftime('%Y-%m-%d %H:%M'), app.user.email
+        ])
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    filename = f"{company.company_name}_{company.for_batch}.xlsx".replace(' ', '_')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
+
+@login_required
+def send_custom_email(request):
+    # Password protection
+    if not request.session.get('email_page_authenticated'):
+        if request.method == 'POST' and 'email_page_password' in request.POST:
+            if request.POST.get('email_page_password') == EMAIL_PAGE_PASSWORD:
+                request.session['email_page_authenticated'] = True
+            else:
+                return render(request, 'send_custom_email.html', {'auth_required': True, 'error': 'Invalid password'})
+        else:
+            return render(request, 'send_custom_email.html', {'auth_required': True})
+    # Get filter options
+    batches = sorted(set(CustomUser.objects.exclude(end_year=None).values_list('end_year', flat=True)))
+    branches = ['IT', 'CSE', 'ECE', 'EEE', 'ICE']
+    companies = PlacementCompany.objects.all()
+    users = CustomUser.objects.all()
+    filtered_users = None
+    message_sent = False
+    error = None
+    if request.method == 'POST' and 'email_page_password' not in request.POST:
+        # Get filters
+        selected_batches = request.POST.getlist('batch')
+        selected_branches = request.POST.getlist('branch')
+        company_id = request.POST.get('company')
+        eligibility_type = request.POST.get('eligibility_type')  # eligible_only or all
+        registration_type = request.POST.get('registration_type')  # registered or not_registered
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        users = CustomUser.objects.all()
+        if selected_batches:
+            users = users.filter(end_year__in=selected_batches)
+        if selected_branches:
+            users = users.filter(branch__in=selected_branches)
+        if company_id and company_id != '':
+            company = PlacementCompany.objects.get(id=company_id)
+            if eligibility_type == 'eligible_only':
+                users = [u for u in users if is_user_eligible_for_company(u, company)]
+            if registration_type == 'registered':
+                registered_ids = PlacementApplication.objects.filter(company=company).values_list('user_id', flat=True)
+                users = [u for u in users if u.id in registered_ids]
+            elif registration_type == 'not_registered':
+                registered_ids = PlacementApplication.objects.filter(company=company).values_list('user_id', flat=True)
+                users = [u for u in users if u.id not in registered_ids]
+        # Remove duplicates if any
+        if isinstance(users, list):
+            filtered_users = users
+        else:
+            filtered_users = list(users.distinct())
+        # Handle attachments
+        attachments = request.FILES.getlist('attachments') if hasattr(request, 'FILES') else []
+        # Send email (HTML)
+        if filtered_users and subject and message:
+            for user in filtered_users:
+                email = EmailMessage(
+                    subject=subject,
+                    body=message,
+                    from_email=None,
+                    to=[user.email],
+                )
+                email.content_subtype = 'html'  # Send as HTML
+                for f in attachments:
+                    email.attach(f.name, f.read(), f.content_type)
+                email.send(fail_silently=True)
+            message_sent = True
+        else:
+            error = 'No users found or subject/message missing.'
+    return render(request, 'send_custom_email.html', {
+        'batches': batches,
+        'branches': branches,
+        'companies': companies,
+        'message_sent': message_sent,
+        'error': error,
+        'auth_required': False
+    })
+
+@login_required
+def upload_csv(request):
+    # Restrict to superusers
+    if not request.user.is_superuser:
+        return render(request, 'upload_csv.html', {'permission_denied': True})
+    # Password protection like tp_page
+    if not request.session.get('upload_csv_authenticated'):
+        if request.method == 'POST' and 'upload_csv_password' in request.POST:
+            if request.POST.get('upload_csv_password') == UPLOAD_CSV_PASSWORD:
+                request.session['upload_csv_authenticated'] = True
+            else:
+                return render(request, 'upload_csv.html', {'auth_required': True, 'error': 'Invalid password'})
+        else:
+            return render(request, 'upload_csv.html', {'auth_required': True})
+
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        csv_file = request.FILES['csv_file']
+        decoded_file = TextIOWrapper(csv_file.file, encoding='utf-8')
+        reader = csv.DictReader(decoded_file)
+        updated, not_found = 0, 0
+
+        for row in reader:
+            enrollment_number = row.get('enrollment_number')
+            try:
+                user = CustomUser.objects.get(enrollment_number=enrollment_number)
+                fields = [
+                    'sem1_sgpa', 'sem2_sgpa', 'sem3_sgpa', 'sem4_sgpa',
+                    'sem5_sgpa', 'sem6_sgpa', 'sem7_sgpa', 'sem8_sgpa',
+                    'cgpa', 'active_backlogs', 'total_backlogs',
+                    'class12_percentage', 'class10_percentage', 'total_percentage'
+                ]
+                changed = False
+                for field in fields:
+                    value = row.get(field)
+                    if value is not None:
+                        value = value.strip()
+                    if value:  # Only update if value is not empty after stripping
+                        current = getattr(user, field, None)
+                        if current in [None, '', 0]:
+                            setattr(user, field, value)
+                            changed = True
+                if changed:
+                    user.save()
+                    updated += 1
+            except CustomUser.DoesNotExist:
+                not_found += 1
+
+        messages.success(request, f"Updated {updated} users. {not_found} enrollment numbers not found.")
+        return redirect('upload_csv')
+
+    return render(request, 'upload_csv.html', {'auth_required': False})

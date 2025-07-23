@@ -118,26 +118,37 @@
             <div class="form-group">
                 <label for="id_name">Full Name</label>
                 {{ form.name }}
+                <input type="hidden" name="name" value="{{ form.name.value }}">
             </div>
+    
             <div class="form-group">
                 <label for="id_branch">Branch</label>
                 {{ form.branch }}
+                <input type="hidden" name="branch" value="{{ form.branch.value }}">
             </div>
+    
             <div class="form-group">
                 <label for="id_enrollment_number">Enrollment Number</label>
                 {{ form.enrollment_number }}
+                <input type="hidden" name="enrollment_number" value="{{ form.enrollment_number.value }}">
             </div>
+    
             <div class="form-group">
                 <label for="id_student_class">Class</label>
                 {{ form.student_class }}
+                <input type="hidden" name="student_class" value="{{ form.student_class.value }}">
             </div>
+    
             <div class="form-group">
                 <label for="id_cgpa">CGPA</label>
                 {{ form.cgpa }}
+                <input type="hidden" name="cgpa" value="{{ form.cgpa.value }}">
             </div>
+    
             <div class="form-group">
                 <label for="id_total_percentage">Total Percentage</label>
                 {{ form.total_percentage }}
+                <input type="hidden" name="total_percentage" value="{{ form.total_percentage.value }}">
             </div>
             <div class="form-group">
                 <label for="id_resume_link">Resume Link

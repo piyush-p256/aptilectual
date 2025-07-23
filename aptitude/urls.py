@@ -23,4 +23,8 @@ urlpatterns = [
     path('cancel_test/<int:test_id>/', views.cancel_test, name='cancel_test'),
     path('placement-drive/', views.placement_drive, name='placement_drive'),
     path('placement-apply/<int:company_id>/', views.placement_application, name='placement_application'),
+    path('tp/', views.tp_page, name='tp_page'),
+    path('tp/download/<int:company_id>/', views.tp_download_excel, name='tp_download_excel'),
+    path('send-custom-email/', views.send_custom_email, name='send_custom_email'),
+    path('upload-csv/', views.upload_csv, name='upload_csv'),
 ]

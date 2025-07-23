@@ -27,6 +27,8 @@ SECRET_KEY = 'django-insecure-x(mjeyv=b8y(@f9n40a4r*3d)j8h)4omzxkp50ar6d!d#@2n!)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+SITE_URL = 'http://127.0.0.1:8000/'
+
 ALLOWED_HOSTS = ['*']
 LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = '/login/'
@@ -136,6 +138,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'dhannu6561@gmail.com'  # <-- Replace with your Gmail
-EMAIL_HOST_PASSWORD = 'twhx njyn nfla jbgp'  # <-- Replace with your Gmail App Password
+EMAIL_HOST_USER = ''  # <-- Replace with your Gmail
+EMAIL_HOST_PASSWORD = ''  # <-- Replace with your Gmail App Password
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
